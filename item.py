@@ -1,17 +1,103 @@
-import time
-
-
 class Item:
-    def __init__(self, name, mass, utility):
+    def __init__(self, name: str, mass: float, utility: float, next=None):
         self.name = name
-        self.mass = mass
-        self.utility = utility
+        self.mass = mass * 100
+        self.utility = utility * 100
+        self.factor = round(utility / mass, 3)
+        self.next = next
 
     def __str__(self):
-        return f'{self.name} ({self.mass} kg, {self.utility} utils)'
+        return f'{self.name} ({self.mass} kg, {self.utility} utils, factor of {self.factor})'
 
-    def __repr__(self):
-        return f'Item({self.name}, {self.mass}, {self.utility})'
+    def __lt__(self, other):
+        return self.factor < other.factor
 
-    def __eq__(self, other):
-        return self.name == other.name and self.mass == other.mass and self.utility == other.utility
+    def __le__(self, other):
+        return self.factor <= other.factor
+
+    def __gt__(self, other):
+        return self.factor > other.factor
+
+    def __ge__(self, other):
+        return self.factor >= other.factor
+
+
+class SortedLinkedList:
+    def __init__(self):
+        self.head = None
+
+    def insert_sorted(self, data):
+        new_node = data
+        if self.head is None or self.head.mass > data.mass:
+            new_node.next = self.head
+            self.head = new_node
+            return
+        current = self.head
+        while current.next and current.next.mass <= data.mass:
+            current = current.next
+        new_node.next = current.next
+        current.next = new_node
+
+    def remove(self, data):
+        if self.head is None:
+            return
+        if self.head == data:
+            self.head = self.head.next
+            return
+        current = self.head
+        while current.next and current.next != data:
+            current = current.next
+
+        if current.next:
+            current.next = current.next.next
+
+    def __iter__(self):
+        self._current = self.head
+        return self
+
+    def __next__(self):
+        if self._current is None:
+            raise StopIteration
+        else:
+            data = self._current
+            self._current = self._current.next
+            return data
+
+    def print_list(self):
+        current = self.head
+        while current:
+            print(current)
+            current = current.next
+
+    def to_array(self):
+        array = []
+        current = self.head
+        while current:
+            array.append(current.data)
+            current = current.next
+        return array
+
+    def __str__(self):
+        return str(self.to_array())
+
+
+def exact(items: [Item], C: float) -> [int, int, SortedLinkedList]:
+    total_mass = 0
+    total_utility = 0
+    best_item = SortedLinkedList()
+    items.sort(reverse=True, key=lambda x: x.factor)
+    for i in items:
+        if total_mass + i.mass <= C * 100:
+            total_mass += i.mass
+            total_utility += i.utility
+            best_item.insert_sorted(i)
+        else:
+            for j in best_item:
+                if total_mass - j.mass + i.mass <= C * 100 and j.utility < i.utility:
+                    total_mass = total_mass - j.mass + i.mass
+                    total_utility = total_utility - j.utility + i.utility
+                    best_item.remove(j)
+                    best_item.insert_sorted(i)
+                    break
+
+    return total_mass, total_utility, best_item
