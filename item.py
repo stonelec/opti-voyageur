@@ -101,3 +101,17 @@ def exact(items: [Item], C: float) -> [int, int, SortedLinkedList]:
                     break
 
     return total_mass, total_utility, best_item
+
+
+def heuristic_1(items: [Item], C: float) -> [int, int, SortedLinkedList]:
+    total_mass = 0
+    total_utility = 0
+    best_item = SortedLinkedList()
+    items.sort(reverse=True, key=lambda x: x.factor)
+    for i in items:
+        if total_mass + i.mass <= C * 100:
+            total_mass += i.mass
+            total_utility += i.utility
+            best_item.insert_sorted(i)
+
+    return total_mass, total_utility, best_item
