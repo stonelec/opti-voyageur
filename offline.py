@@ -11,7 +11,7 @@ DIM = {
 
 
 class Container:
-    def __init__(self, length: int=LENGTH, width: int=WIDTH, height: int=HEIGHT, dimension=3, next=None):
+    def __init__(self, length: int = LENGTH, width: int = WIDTH, height: int = HEIGHT, dimension=3, next=None):
         self.length = length
         self.width = width
         self.height = height
@@ -120,7 +120,8 @@ def d1(items: [Item]) -> [Item]:
                 keep = False
             else:
                 for item_to_replace in containers[j].items:
-                    if containers[j].used_length - item_to_replace.length + item.length <= containers[j].length and item_to_replace.length < item.length:
+                    if containers[j].used_length - item_to_replace.length + item.length <= containers[
+                        j].length and item_to_replace.length < item.length:
                         containers[j].used_length = containers[j].used_length - item_to_replace.length + item.length
                         containers[j].items.remove(item_to_replace)
                         containers[j].items.insert_sorted(item)
@@ -134,20 +135,23 @@ def d1(items: [Item]) -> [Item]:
 
     return containers
 
-if __name__ == '__main__':
-    def read_csv(filename):
-        item_list = []
-        try:
-            with open(filename, 'r') as file:
-                lines = file.readlines()
-                for line in lines:
-                    number, name, length, width, height = line.strip().split(';')
-                    item = Item(name, int(float(length)*1000), int(float(width)*1000), int(float(height)*1000))
-                    item_list.append(item)
-        except FileNotFoundError:
-            print(f'File {filename} not found')
 
-        return item_list
+def read_csv(filename):
+    item_list = []
+    try:
+        with open(filename, 'r') as file:
+            lines = file.readlines()
+            for line in lines:
+                number, name, length, width, height = line.strip().split(';')
+                item = Item(name, int(float(length) * 1000), int(float(width) * 1000), int(float(height) * 1000))
+                item_list.append(item)
+    except FileNotFoundError:
+        print(f'File {filename} not found')
+
+    return item_list
+
+
+if __name__ == '__main__':
 
     items = read_csv('Données_marchandises_2324.csv')
     result = d1(items)
