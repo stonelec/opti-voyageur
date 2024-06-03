@@ -7,7 +7,7 @@ class Item:
         self.next = next
 
     def __str__(self):
-        return f'{self.name} ({self.mass/100} kg, {self.utility/100} utils, factor of {self.factor})'
+        return f'{self.name} ({self.mass / 100} kg, {self.utility / 100} utils, factor of {self.factor})'
 
     def __lt__(self, other):
         return self.factor < other.factor
@@ -81,7 +81,7 @@ class SortedLinkedList:
         return str(self.to_array())
 
 
-def exact_recu(items: [Item], C: float, k: int, best_mass: int, best_utility: int, best_items: [Item]):
+def exact_recu(items, C, k, best_mass, best_utility, best_items):
     current_best_utility = best_utility
     current_best_mass = best_mass
     current_best_items = best_items[:]
@@ -104,7 +104,7 @@ def exact_recu(items: [Item], C: float, k: int, best_mass: int, best_utility: in
     return current_best_utility, current_best_mass, current_best_items
 
 
-def exact(items: [Item], C: float) -> [int, int, [Item]]:
+def exact(items, C):
     C = int(C * 100)
     best_items = []
     best_utility, best_mass, best_items = exact_recu(items, C, 0, 0, 0, best_items)
