@@ -111,35 +111,6 @@ def exact(items, C):
     return best_mass, best_utility, best_items
 
 
-def exact_iter(items, C):
-    C = int(C * 100)
-    stack = [(0, C, 0, 0, np.array([], dtype=object))]
-    current_best_utility = 0
-    current_best_mass = 0
-    current_best_items = np.array([], dtype=object)
-
-    while stack:
-        k, remaining_C, best_mass, best_utility, best_items = stack.pop()
-
-        if k >= len(items):
-            continue
-
-        for i in range(k, len(items)):
-            if items[i].mass <= remaining_C:
-                new_mass = best_mass + items[i].mass
-                new_utility = best_utility + items[i].utility
-                new_items = np.append(best_items, items[i])
-
-                if new_utility > current_best_utility:
-                    current_best_utility = new_utility
-                    current_best_mass = new_mass
-                    current_best_items = new_items
-
-                stack.append((i + 1, remaining_C - items[i].mass, new_mass, new_utility, new_items))
-
-    return current_best_mass, current_best_utility, current_best_items
-
-
 def heuristic_1(items: [Item], C: float) -> [int, int, SortedLinkedList]:
     total_mass = 0
     total_utility = 0
