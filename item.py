@@ -1,13 +1,13 @@
 class Item:
     def __init__(self, name: str, mass: float, utility: float, next=None):
         self.name = name
-        self.mass = mass * 100
-        self.utility = utility * 100
+        self.mass = int(mass * 100)
+        self.utility = int(utility * 100)
         self.factor = round(utility / mass, 3)
         self.next = next
 
     def __str__(self):
-        return f'{self.name} ({self.mass} kg, {self.utility} utils, factor of {self.factor})'
+        return f'{self.name} ({self.mass/100} kg, {self.utility/100} utils, factor of {self.factor})'
 
     def __lt__(self, other):
         return self.factor < other.factor
@@ -81,9 +81,34 @@ class SortedLinkedList:
         return str(self.to_array())
 
 
+def exact_recu(items: [Item], C: float, k: int, best_mass: int, best_utility: int, best_items: [Item]):
+    current_best_utility = best_utility
+    current_best_mass = best_mass
+    current_best_items = best_items[:]
+
+    for i in range(k, len(items)):
+        if items[i].mass <= C:
+            new_mass = best_mass + items[i].mass
+            new_utility = best_utility + items[i].utility
+            if new_utility > current_best_utility:
+                current_best_utility = new_utility
+                current_best_mass = new_mass
+                current_best_items = best_items[:] + [items[i]]
+            recu_utility, recu_mass, recu_items = exact_recu(items, C - items[i].mass, i + 1, new_mass, new_utility,
+                                                             best_items + [items[i]])
+            if recu_utility > current_best_utility:
+                current_best_utility = recu_utility
+                current_best_mass = recu_mass
+                current_best_items = recu_items
+
+    return current_best_utility, current_best_mass, current_best_items
+
+
 def exact(items: [Item], C: float) -> [int, int, [Item]]:
-    items.sort(reverse=True, key=lambda x: x.factor)
-    # recusion
+    C = int(C * 100)
+    best_items = []
+    best_utility, best_mass, best_items = exact_recu(items, C, 0, 0, 0, best_items)
+    return best_mass, best_utility, best_items
 
 
 def heuristic_1(items: [Item], C: float) -> [int, int, SortedLinkedList]:
