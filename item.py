@@ -81,7 +81,12 @@ class SortedLinkedList:
         return str(self.to_array())
 
 
-def exact(items: [Item], C: float) -> [int, int, SortedLinkedList]:
+def exact(items: [Item], C: float) -> [int, int, [Item]]:
+    items.sort(reverse=True, key=lambda x: x.factor)
+    # recusion
+
+
+def heuristic_1(items: [Item], C: float) -> [int, int, SortedLinkedList]:
     total_mass = 0
     total_utility = 0
     best_item = SortedLinkedList()
@@ -103,7 +108,7 @@ def exact(items: [Item], C: float) -> [int, int, SortedLinkedList]:
     return total_mass, total_utility, best_item
 
 
-def heuristic_1(items: [Item], C: float) -> [int, int, SortedLinkedList]:
+def heuristic_2(items: [Item], C: float) -> [int, int, SortedLinkedList]:
     total_mass = 0
     total_utility = 0
     best_item = SortedLinkedList()
