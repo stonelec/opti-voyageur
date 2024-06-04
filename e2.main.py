@@ -101,6 +101,7 @@ class Container2(Container):
                                 return True
             return False
 
+
     def add_item_1D(self, item):
         if self.fill_item(item):
             self.items.append(item)
@@ -510,18 +511,25 @@ def print_containers(containers):
             print()
 
 
+def d_k(items: [Item], dim: int = 3, offline: bool = False):
+    if offline:
+        if dim == 1:
+            return d1_with_map_offline(items)
+        if dim == 2:
+            return d2_with_map_offline(items)
+        if dim == 3:
+            return d3_with_map_offline(items)
+    else:
+        if dim == 1:
+            return d1_with_map_online(items)
+        if dim == 2:
+            return d2_with_map_online(items)
+        if dim == 3:
+            return d3_with_map_online(items)
+
+
 if __name__ == '__main__':
     items = Item.list_from_csv('Données_marchandises_2324.csv')
-
-    # start = time.time()
-    # result = d2_2(items)
-    # print(time.time() - start)
-    # print(len(result))
-    # c = 0
-    # for container in result:
-    #     for item in container.items:
-    #         c += 1
-    # print(c)
 
     # result[0].print_map()
 
@@ -540,28 +548,28 @@ if __name__ == '__main__':
 
     resultArray = [[], []]
 
-    start_time = time.time()
-    resultArray[0].append([d1_with_map_online(items)])
-    resultArray[0][0].append(time.time() - start_time)
+    for i in range(3):
+        start_time = time.time()
+        resultArray[0].append([d(items, dim=i + 1, offline=False)])
+        resultArray[0][i].append(time.time() - start_time)
 
-    start_time = time.time()
-    resultArray[0].append([d2_with_map_online(items)])
-    resultArray[0][1].append(time.time() - start_time)
+        start_time = time.time()
+        resultArray[1].append([d(items, dim=i + 1, offline=True)])
+        resultArray[1][i].append(time.time() - start_time)
 
-    start_time = time.time()
-    resultArray[0].append([d3_with_map_online(items)])
-    resultArray[0][2].append(time.time() - start_time)
+    print_as_a_table(resultArray)
 
-    start_time = time.time()
-    resultArray[1].append([d1_with_map_offline(items)])
-    resultArray[1][0].append(time.time() - start_time)
+    resultArray.clear()
 
-    start_time = time.time()
-    resultArray[1].append([d2_with_map_offline(items)])
-    resultArray[1][1].append(time.time() - start_time)
+    resultArray = [[], []]
 
-    start_time = time.time()
-    resultArray[1].append([d3_with_map_offline(items)])
-    resultArray[1][2].append(time.time() - start_time)
+    for i in range(3):
+        start_time = time.time()
+        resultArray[0].append([d_k(items, dim=i + 1, offline=False)])
+        resultArray[0][i].append(time.time() - start_time)
+
+        start_time = time.time()
+        resultArray[1].append([d_k(items, dim=i + 1, offline=True)])
+        resultArray[1][i].append(time.time() - start_time)
 
     print_as_a_table(resultArray)
