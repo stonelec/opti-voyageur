@@ -20,21 +20,90 @@ class Container:
 
         self.items = SortedLinkedList(DIM[dimension])
         self.used_length = 0
-        self.used_width = 0
-        self.used_height = 0
+        self.used_area = 0
 
     def __str__(self):
         return f'({self.length} m * {self.width} m * {self.height} m)'
 
+    def add_item(self, item):
+        self.items.insert_sorted(item)
+        self.used_length += item.length
+
+    def remove_item(self, item):
+        self.items.remove(item)
+        self.used_length -= item.length
+
+
+class Container2(Container):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.map = [[0 for j in range(int(WIDTH//100))] for i in range(int(LENGTH//100))]
+        self.items = []
+
+    def add_item(self, item):
+        id = len(self.items)+1
+        stop = False
+        for j in range(int(LENGTH//100) - int(item.length//100) + 1):
+            for i in range(int(WIDTH//100) - int(item.width//100) + 1):
+                if self.map[j][i] == 0:
+                    is_ok = True
+                    for y in range(item.length//100):
+                        for x in range(item.width//100):
+                            if self.map[y+j][x+i] != 0:
+                                is_ok = False
+                                break
+                    if is_ok:
+                        for y in range(item.length // 100):
+                            for x in range(item.width // 100):
+                                self.map[y+j][x+i] = id
+                        stop = True
+                if stop:
+                    break
+            if stop:
+                break
+        if stop:
+            item.id = id
+            self.items.append(item)
+            self.used_area += item.area
+            return True
+        return False
+
+    def print_map(self):
+        for row in self.map:
+            print('| ', end='')
+            for col in row:
+                if col != 0:
+                    print(col, end='')
+                else:
+                    print('_', end='')
+            print(' |')
+
 
 class Item:
-    def __init__(self, name: str, length: int, width: int, height: int):
+    def __init__(self, id: int, name: str, length: int, width: int, height: int):
+        self.id = id
         self.name = name
         self.length = length
         self.width = width
         self.height = height
         self.area = length * width
         self.volume = length * width * height
+
+    @staticmethod
+    def list_from_csv(filename: str):
+        item_list = []
+        try:
+            with open(filename, 'r') as file:
+                lines = file.readlines()
+                for line in lines:
+                    number, name, length, width, height = line.strip().split(';')
+                    item = Item(int(number), name, int(float(length)*1000), int(float(width)*1000), int(float(height)*1000))
+                    item_list.append(item)
+        except FileNotFoundError:
+            print(f'File {filename} not found')
+
+        return item_list
+
 
 
 class SortedLinkedList:
@@ -108,22 +177,19 @@ def d1(items: [Item]) -> [Item]:
         while keep:
             if len(containers) == j:
                 containers.append(Container(dimension=1))
-                containers[j].items.insert_sorted(item)
-                containers[j].used_length += item.length
+                containers[j].add_item(item)
                 del items[0]
                 keep = False
 
             elif (containers[j].length - containers[j].used_length) >= item.length:
-                containers[j].items.insert_sorted(item)
-                containers[j].used_length += item.length
+                containers[j].add_item(item)
                 del items[0]
                 keep = False
             else:
                 for item_to_replace in containers[j].items:
                     if containers[j].used_length - item_to_replace.length + item.length <= containers[j].length and item_to_replace.length < item.length:
-                        containers[j].used_length = containers[j].used_length - item_to_replace.length + item.length
-                        containers[j].items.remove(item_to_replace)
-                        containers[j].items.insert_sorted(item)
+                        containers[j].remove_item(item_to_replace)
+                        containers[j].add_item(item)
                         del items[0]
                         items.insert(0, item_to_replace)
                         keep = False
@@ -134,6 +200,28 @@ def d1(items: [Item]) -> [Item]:
 
     return containers
 
+
+def d2_2(items: [Item]) -> [Item]:
+    containers = []
+    #items = sorted(items, reverse=True, key=lambda x: x.area)
+    for item in items:
+        j = 0
+        keep = True
+        while keep:
+            if len(containers) == j:
+                containers.append(Container2(dimension=2))
+                inserted = containers[j].add_item(item)
+                if inserted:
+                    keep = False
+
+            elif (containers[j].area - containers[j].used_area) >= item.area:
+                inserted = containers[j].add_item(item)
+                if inserted:
+                    keep = False
+            j += 1
+    return containers
+
+
 if __name__ == '__main__':
     def read_csv(filename):
         item_list = []
@@ -142,7 +230,7 @@ if __name__ == '__main__':
                 lines = file.readlines()
                 for line in lines:
                     number, name, length, width, height = line.strip().split(';')
-                    item = Item(name, int(float(length)*1000), int(float(width)*1000), int(float(height)*1000))
+                    item = Item(int(number), name, int(float(length)*1000), int(float(width)*1000), int(float(height)*1000))
                     item_list.append(item)
         except FileNotFoundError:
             print(f'File {filename} not found')
@@ -150,10 +238,27 @@ if __name__ == '__main__':
         return item_list
 
     items = read_csv('Données_marchandises_2324.csv')
-    result = d1(items)
+    result = d2_2(items)
     print(len(result))
     c = 0
     for container in result:
         for item in container.items:
             c += 1
     print(c)
+
+    #result[0].print_map()
+
+    def print_containers(containers):
+        nb_rows = LENGTH // 100
+        for i in range(nb_rows):
+            for container in containers:
+                row = container.map[i]
+                print('| ', end='')
+                for col in row:
+                    if col != 0:
+                        print(col, end='')
+                    else:
+                        print('_', end='')
+                print(' |   ', end='')
+            print()
+    print_containers(result)
