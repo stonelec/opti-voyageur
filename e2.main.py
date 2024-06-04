@@ -1,5 +1,6 @@
 # Dimensions des containers en millimètres
 import time
+import colored
 
 LENGTH = int(115.83)
 WIDTH = int(22.94)
@@ -23,6 +24,7 @@ class Container:
         self.items = SortedLinkedList(DIM[dimension])
         self.used_length = 0
         self.used_area = 0
+        self.used_volume = 0
 
         self.dim = dimension
 
@@ -48,43 +50,96 @@ class Container:
 class Container2(Container):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.map = [[0 for i in range(WIDTH)] for j in range(LENGTH)]
         self.items = []
 
-    def add_item(self, item):
-        id = len(self.items) + 1
-        stop = False
-        for j in range(LENGTH - item.length + 1):
-            for i in range(WIDTH - item.width + 1):
-                if self.map[j][i] == 0:
-                    is_ok = True
-                    for y in range(item.length):
-                        for x in range(item.width):
-                            if self.map[y + j][x + i] != 0:
-                                is_ok = False
-                                break
-                    if is_ok:
+    def check_enough_space(self, item, i=0, j=0, k=0):
+        if self.dim == 1:
+            return (self.length-j - item.length) >= 0
+        if self.dim == 2:
+            for y in range(j, j + item.length):
+                for x in range(i, i + item.width):
+                    if self.map[y][x] != 0:
+                        return False
+            return True
+        if self.dim == 3:
+            for y in range(j, j + item.length):
+                for x in range(i, i + item.width):
+                    for z in range(k, k + item.height):
+                        if self.map[y][x][z] != 0:
+                            return False
+            return True
+
+    def fill_item(self, item):
+        if self.dim == 1:
+            for j in range(self.length - item.length + 1):
+                if self.map[j] == 0:
+                    if self.check_enough_space(item, j=j):
                         for y in range(item.length):
-                            for x in range(item.width):
-                                self.map[y + j][x + i] = id
-                        stop = True
-                if stop:
-                    break
-            if stop:
-                break
-        if stop:
-            item.id = id
+                            self.map[y + j] = item.id
+                        return True
+            return False
+        if self.dim == 2:
+            for j in range(self.length - item.length + 1):
+                for i in range(self.width - item.width + 1):
+                    if self.map[j][i] == 0:
+                        if self.check_enough_space(item, i, j):
+                            for y in range(item.length):
+                                for x in range(item.width):
+                                    self.map[y + j][x + i] = item.id
+                            return True
+            return False
+        if self.dim == 3:
+            for j in range(self.length - item.length + 1):
+                for i in range(self.width - item.width + 1):
+                    for k in range(self.height - item.height + 1):
+                        if self.map[j][i][k] == 0:
+                            if self.check_enough_space(item, i, j, k):
+                                for y in range(j, j + item.length):
+                                    for x in range(i, i + item.width):
+                                        for z in range(k, k + item.height):
+                                            self.map[y][x][z] = item.id
+                                return True
+            return False
+
+
+    def add_item_1D(self, item):
+        if self.fill_item(item):
+            self.items.append(item)
+            self.used_length += item.length
+            return True
+        return False
+
+    def add_item_2D(self, item):
+        if self.fill_item(item):
             self.items.append(item)
             self.used_area += item.area
             return True
         return False
 
+    def add_item_3D(self, item):
+        if self.fill_item(item):
+            self.items.append(item)
+            self.used_volume += item.volume
+            return True
+        return False
+
+    def add_item(self, item):
+        if self.dim == 1:
+            return self.add_item_1D(item)
+        if self.dim == 2:
+            return self.add_item_2D(item)
+        if self.dim == 3:
+            return self.add_item_3D(item)
+        return False
+
     def print_map(self):
+        cell_width = 3  # Fixed width for each cell
         for row in self.map:
             print('| ', end='')
             for col in row:
                 if col != 0:
-                    print(col, end='')
+                    color = colored.fg(col % 256)
+                    print(colored.stylize(f'{col:>{cell_width}}', color), end='')
                 else:
                     print('_', end='')
             print(' |')
@@ -213,23 +268,33 @@ def d1(items: [Item]) -> [Item]:
     return containers
 
 
-def d2_2(items: [Item]) -> [Item]:
+def d(items: [Item], dim: int = 3, offline: bool = False) -> [Item]:
     containers = []
-    #items = sorted(items, reverse=True, key=lambda x: x.area)
+    if offline:
+        items = sorted(items, reverse=True, key=lambda x: x.area)
     for item in items:
         j = 0
         keep = True
         while keep:
             if len(containers) == j:
-                containers.append(Container2(dimension=2))
+                containers.append(Container2(dimension=dim))
                 inserted = containers[j].add_item(item)
                 if inserted:
                     keep = False
-
-            elif (containers[j].area - containers[j].used_area) >= item.area:
+            elif dim == 1:
                 inserted = containers[j].add_item(item)
                 if inserted:
                     keep = False
+            elif dim == 2:
+                if (containers[j].area - containers[j].used_area) >= item.area:
+                    inserted = containers[j].add_item(item)
+                    if inserted:
+                        keep = False
+            elif dim == 3:
+                if (containers[j].volume - containers[j].used_volume) >= item.volume:
+                    inserted = containers[j].add_item(item)
+                    if inserted:
+                        keep = False
             j += 1
     return containers
 
@@ -408,7 +473,8 @@ def print_containers(containers):
             print('| ', end='')
             for col in row:
                 if col != 0:
-                    print(f'{col:>{cell_width}}', end='')
+                    color = colored.fg(col % 256)
+                    print(colored.stylize(f'{col:>{cell_width}}', color), end='')
                 else:
                     print('_' * cell_width, end='')
             print(' |   ', end='')
@@ -434,7 +500,8 @@ if __name__ == '__main__':
     # print_containers(result)
 
     start = time.time()
-    result = d2_with_map_online(items)
+    result = d(items, dim=3, offline=False)
+    #result = d3_with_map_online(items)
     print(time.time() - start)
     print(len(result))
     c = 0
@@ -443,7 +510,7 @@ if __name__ == '__main__':
             c += 1
     print(c)
 
-    print_containers(result)
+    #print_containers(result)
 
     # resultArray = [[], []]
     # 
