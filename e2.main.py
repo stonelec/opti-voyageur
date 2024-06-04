@@ -54,7 +54,7 @@ class Container2(Container):
 
     def check_enough_space(self, item, i=0, j=0, k=0):
         if self.dim == 1:
-            return (self.length-j - item.length) >= 0
+            return (self.length - j - item.length) >= 0
         if self.dim == 2:
             for y in range(j, j + item.length):
                 for x in range(i, i + item.width):
@@ -100,7 +100,6 @@ class Container2(Container):
                                             self.map[y][x][z] = item.id
                                 return True
             return False
-
 
     def add_item_1D(self, item):
         if self.fill_item(item):
@@ -246,7 +245,6 @@ def d1(items: [Item]) -> [Item]:
                 containers[j].add_item(item)
                 del items[0]
                 keep = False
-
             elif (containers[j].length - containers[j].used_length) >= item.length:
                 containers[j].add_item(item)
                 del items[0]
@@ -271,30 +269,35 @@ def d1(items: [Item]) -> [Item]:
 def d(items: [Item], dim: int = 3, offline: bool = False) -> [Item]:
     containers = []
     if offline:
-        items = sorted(items, reverse=True, key=lambda x: x.area)
+        if dim == 1:
+            items = sorted(items, reverse=True, key=lambda x: x.length)
+        elif dim == 2:
+            items = sorted(items, reverse=True, key=lambda x: x.area)
+        else:
+            items = sorted(items, reverse=True, key=lambda x: x.volume)
     for item in items:
         j = 0
-        keep = True
-        while keep:
+        keep_going = True
+        while keep_going:
             if len(containers) == j:
                 containers.append(Container2(dimension=dim))
                 inserted = containers[j].add_item(item)
                 if inserted:
-                    keep = False
+                    keep_going = False
             elif dim == 1:
                 inserted = containers[j].add_item(item)
                 if inserted:
-                    keep = False
+                    keep_going = False
             elif dim == 2:
                 if (containers[j].area - containers[j].used_area) >= item.area:
                     inserted = containers[j].add_item(item)
                     if inserted:
-                        keep = False
+                        keep_going = False
             elif dim == 3:
                 if (containers[j].volume - containers[j].used_volume) >= item.volume:
                     inserted = containers[j].add_item(item)
                     if inserted:
-                        keep = False
+                        keep_going = False
             j += 1
     return containers
 
@@ -481,10 +484,9 @@ def print_as_a_table(resultArray):
 def print_containers(containers):
     nb_rows = LENGTH
     cell_width = 3  # Fixed width for each cell
-
-    for i in range(nb_rows):
+    if containers[0].dim == 1:
         for container in containers:
-            row = container.map[i]
+            row = container.map
             print('| ', end='')
             for col in row:
                 if col != 0:
@@ -492,8 +494,20 @@ def print_containers(containers):
                     print(colored.stylize(f'{col:>{cell_width}}', color), end='')
                 else:
                     print('_' * cell_width, end='')
-            print(' |   ', end='')
-        print()
+            print(' |')
+    if containers[0].dim == 2:
+        for i in range(nb_rows):
+            for container in containers:
+                row = container.map[i]
+                print('| ', end='')
+                for col in row:
+                    if col != 0:
+                        color = colored.fg(col % 256)
+                        print(colored.stylize(f'{col:>{cell_width}}', color), end='')
+                    else:
+                        print('_' * cell_width, end='')
+                print(' |   ', end='')
+            print()
 
 
 if __name__ == '__main__':
