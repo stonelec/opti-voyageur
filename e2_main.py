@@ -528,8 +528,8 @@ if __name__ == '__main__':
     # print_containers(result)
 
     start = time.time()
-    result = d(items, dim=3, offline=False)
-    #result = d3_with_map_online(items)
+    result = d(items, dim=2, offline=True)
+    #result = d2_with_map_offline(items)
     print(time.time() - start)
     print(len(result))
     c = 0
@@ -562,6 +562,34 @@ if __name__ == '__main__':
 
     start_time = time.time()
     resultArray[1].append([d3_with_map_offline(items)])
+    resultArray[1][2].append(time.time() - start_time)
+
+    print_as_a_table(resultArray)
+
+    resultArray = [[], []]
+
+    start_time = time.time()
+    resultArray[0].append([d(items, dim=1, offline=False)])
+    resultArray[0][0].append(time.time() - start_time)
+
+    start_time = time.time()
+    resultArray[0].append([d(items, dim=2, offline=False)])
+    resultArray[0][1].append(time.time() - start_time)
+
+    start_time = time.time()
+    resultArray[0].append([d(items, dim=3, offline=False)])
+    resultArray[0][2].append(time.time() - start_time)
+
+    start_time = time.time()
+    resultArray[1].append([d(items, dim=1, offline=True)])
+    resultArray[1][0].append(time.time() - start_time)
+
+    start_time = time.time()
+    resultArray[1].append([d(items, dim=2, offline=True)])
+    resultArray[1][1].append(time.time() - start_time)
+
+    start_time = time.time()
+    resultArray[1].append([d(items, dim=3, offline=True)])
     resultArray[1][2].append(time.time() - start_time)
 
     print_as_a_table(resultArray)
