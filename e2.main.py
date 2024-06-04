@@ -302,21 +302,24 @@ def d(items: [Item], dim: int = 3, offline: bool = False) -> [Item]:
 def d1_with_map_online(items: [Item]):
     containers = []
     for i in items:
-        itemAdded = False
+        item_added = False
         for j in containers:
-            for k in range(j.length - i.length):
-                if check_if_can_add(j, i, k):
-                    for l in range(i.length):
-                        j.map[k + l] = i.id
-                    j.items.insert_sorted(i)
-                    itemAdded = True
+            if j.length - j.used_length >= i.length:
+                for k in range(j.length - i.length + 1):
+                    if check_if_can_add(j, i, k):
+                        for l in range(i.length):
+                            j.map[k + l] = i.id
+                        j.items.insert_sorted(i)
+                        j.used_length += i.length
+                        item_added = True
+                        break
+                if item_added:
                     break
-            if itemAdded:
-                break
 
-        if not itemAdded:
+        if not item_added:
             containers.append(Container(dimension=1))
             containers[len(containers) - 1].items.insert_sorted(i)
+            containers[len(containers) - 1].used_length += i.length
             for l in range(i.length):
                 containers[len(containers) - 1].map[l] = i.id
 
@@ -330,25 +333,28 @@ def d1_with_map_offline(items: [Item]):
 def d2_with_map_online(items: [Item]):
     containers = []
     for i in items:
-        itemAdded = False
+        item_added = False
         for j in containers:
-            for k in range(j.length - i.length):
-                for l in range(j.width - i.width):
-                    if check_if_can_add(j, i, k, l):
-                        for m in range(i.length):
-                            for n in range(i.width):
-                                j.map[k + m][l + n] = i.id
-                        j.items.insert_sorted(i)
-                        itemAdded = True
+            if j.area - j.used_area >= i.area:
+                for k in range(j.length - i.length + 1):
+                    for l in range(j.width - i.width + 1):
+                        if check_if_can_add(j, i, k, l):
+                            for m in range(i.length):
+                                for n in range(i.width):
+                                    j.map[k + m][l + n] = i.id
+                            j.items.insert_sorted(i)
+                            j.used_area += i.area
+                            item_added = True
+                            break
+                    if item_added:
                         break
-                if itemAdded:
+                if item_added:
                     break
-            if itemAdded:
-                break
 
-        if not itemAdded:
+        if not item_added:
             containers.append(Container(dimension=2))
             containers[len(containers) - 1].items.insert_sorted(i)
+            containers[len(containers) - 1].used_area += i.area
             for l in range(i.length):
                 for m in range(i.width):
                     containers[len(containers) - 1].map[l][m] = i.id
@@ -363,29 +369,32 @@ def d2_with_map_offline(items: [Item]):
 def d3_with_map_online(items: [Item]):
     containers = []
     for i in items:
-        itemAdded = False
+        item_added = False
         for j in containers:
-            for k in range(j.length - i.length):
-                for l in range(j.width - i.width):
-                    for m in range(j.height - i.height):
-                        if check_if_can_add(j, i, k, l, m):
-                            for n in range(i.length):
-                                for o in range(i.width):
-                                    for p in range(i.height):
-                                        j.map[k + n][l + o][m + p] = i.id
-                            j.items.insert_sorted(i)
-                            itemAdded = True
+            if j.volume - j.used_volume >= i.volume:
+                for k in range(j.length - i.length + 1):
+                    for l in range(j.width - i.width + 1):
+                        for m in range(j.height - i.height + 1):
+                            if check_if_can_add(j, i, k, l, m):
+                                for n in range(i.length):
+                                    for o in range(i.width):
+                                        for p in range(i.height):
+                                            j.map[k + n][l + o][m + p] = i.id
+                                j.items.insert_sorted(i)
+                                j.used_volume += i.volume
+                                item_added = True
+                                break
+                        if item_added:
                             break
-                    if itemAdded:
+                    if item_added:
                         break
-                if itemAdded:
+                if item_added:
                     break
-            if itemAdded:
-                break
 
-        if not itemAdded:
+        if not item_added:
             containers.append(Container(dimension=3))
             containers[len(containers) - 1].items.insert_sorted(i)
+            containers[len(containers) - 1].used_volume += i.volume
             for l in range(i.length):
                 for m in range(i.width):
                     for n in range(i.height):
@@ -400,15 +409,21 @@ def d3_with_map_offline(items: [Item]):
 
 def check_if_can_add(container: Container, item: Item, x=0, y=0, z=0):
     if container.dim == 1:
+        if container.map[x] != 0:
+            return False
         for i in range(x, x + item.length):
             if container.map[i] != 0:
                 return False
     if container.dim == 2:
+        if container.map[x][y] != 0:
+            return False
         for i in range(x, x + item.length):
             for j in range(y, y + item.width):
                 if container.map[i][j] != 0:
                     return False
     if container.dim == 3:
+        if container.map[x][y][z] != 0:
+            return False
         for i in range(x, x + item.length):
             for j in range(y, y + item.width):
                 for k in range(z, z + item.height):
@@ -482,7 +497,6 @@ def print_containers(containers):
 
 
 if __name__ == '__main__':
-
     items = Item.list_from_csv('Données_marchandises_2324.csv')
 
     # start = time.time()
@@ -510,32 +524,30 @@ if __name__ == '__main__':
             c += 1
     print(c)
 
-    #print_containers(result)
+    resultArray = [[], []]
 
-    # resultArray = [[], []]
-    # 
-    # start_time = time.time()
-    # resultArray[0].append([d1_with_map_online(items)])
-    # resultArray[0][0].append(time.time() - start_time)
-    # 
-    # start_time = time.time()
-    # resultArray[0].append([d2_with_map_online(items)])
-    # resultArray[0][1].append(time.time() - start_time)
-    # 
-    # start_time = time.time()
-    # resultArray[0].append([d3_with_map_online(items)])
-    # resultArray[0][2].append(time.time() - start_time)
-    # 
-    # start_time = time.time()
-    # resultArray[1].append([d1_with_map_offline(items)])
-    # resultArray[1][0].append(time.time() - start_time)
-    # 
-    # start_time = time.time()
-    # resultArray[1].append([d2_with_map_offline(items)])
-    # resultArray[1][1].append(time.time() - start_time)
-    # 
-    # start_time = time.time()
-    # resultArray[1].append([d3_with_map_offline(items)])
-    # resultArray[1][2].append(time.time() - start_time)
-    # 
-    # print_as_a_table(resultArray)
+    start_time = time.time()
+    resultArray[0].append([d1_with_map_online(items)])
+    resultArray[0][0].append(time.time() - start_time)
+
+    start_time = time.time()
+    resultArray[0].append([d2_with_map_online(items)])
+    resultArray[0][1].append(time.time() - start_time)
+
+    start_time = time.time()
+    resultArray[0].append([d3_with_map_online(items)])
+    resultArray[0][2].append(time.time() - start_time)
+
+    start_time = time.time()
+    resultArray[1].append([d1_with_map_offline(items)])
+    resultArray[1][0].append(time.time() - start_time)
+
+    start_time = time.time()
+    resultArray[1].append([d2_with_map_offline(items)])
+    resultArray[1][1].append(time.time() - start_time)
+
+    start_time = time.time()
+    resultArray[1].append([d3_with_map_offline(items)])
+    resultArray[1][2].append(time.time() - start_time)
+
+    print_as_a_table(resultArray)
