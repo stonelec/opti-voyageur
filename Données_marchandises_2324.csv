@@ -9,9 +9,9 @@
 9;Verre;3;2.1;0.6
 10;Ciment;4;1;0.5
 11;Bois vrac;5;0.8;1
-12;Troncs chênes;6;1.9;1
-13;Troncs hêtres;7;1.6;1.5
-14;Pompe à chaleur;5;1.1;2.3
+12;Troncs chÃªnes;6;1.9;1
+13;Troncs hÃªtres;7;1.6;1.5
+14;Pompe Ã  chaleur;5;1.1;2.3
 15;Cuivre;6;2;1.4
 16;Zinc;5;0.8;0.8
 17;Papier;4;1.6;0.6
@@ -19,21 +19,21 @@
 19;Verre blanc vrac;9;0.9;2.2
 20;Verre brun vrac;3;1.6;0.9
 21;Briques rouges;5;1.1;2.4
-22;Pièces métalliques;6;1.6;1.4
-23;Pièces métalliques;7;0.9;1.2
-24;Pièces métalliques;3;1.6;1.9
+22;PiÃ¨ces mÃ©talliques;6;1.6;1.4
+23;PiÃ¨ces mÃ©talliques;7;0.9;1.2
+24;PiÃ¨ces mÃ©talliques;3;1.6;1.9
 25;Ardoises;1;1.8;1
 26;Tuiles;2;1.2;2.3
 27;Vitraux;4;0.7;1.2
 28;Carrelage;6;1.2;2.5
-29;Tôles;7;0.6;1.5
-30;Tôles;9;1.7;1
-31;Tôles;6;1.9;1.6
-32;Tôles;3;2.2;2.2
-33;Tôles;3;0.5;2.2
+29;TÃ´les;7;0.6;1.5
+30;TÃ´les;9;1.7;1
+31;TÃ´les;6;1.9;1.6
+32;TÃ´les;3;2.2;2.2
+33;TÃ´les;3;0.5;2.2
 34;Mobilier urbain;4;0.7;1.9
 35;Lin ;5;2.2;0.7
-36;Textiles à recycler;6;1.3;2.5
+36;Textiles Ã  recycler;6;1.3;2.5
 37;Aluminium;6;1.3;1.2
 38;Batteries automobile;7;1.4;2.5
 39;Quincaillerie;6;1.1;1
@@ -43,7 +43,7 @@
 43;Laine de bois;8;0.9;1.8
 44;Ouate de cellusose;5;1.7;1.2
 45;Chanvre isolation;2.2;1.6;1.1
-46;Moteur élecrique;4.2;1.5;0.8
+46;Moteur Ã©lecrique;4.2;1.5;0.8
 47;Semi conducteurs;3.7;0.9;1.4
 48;Semi conducteurs;5.6;0.5;1.4
 49;Semi conducteurs;4.9;0.9;2.5
@@ -69,32 +69,32 @@
 69;Lithium;2;1.2;1.5
 70;Lithium;6;1.3;2
 71;Lithium;2;0.8;1.1
-72;Contreplaqué;4;1.4;2
-73;Contreplaqué;5;0.6;0.5
-74;Contreplaqué;5;0.6;1.8
-75;Contreplaqué;4;0.7;1.4
-76;Contreplaqué;6;0.5;0.7
-77;Contreplaqué;3;1.5;1.8
-78;Contreplaqué;3;1.4;2
-79;Contreplaqué;3;2;2.3
-80;Contreplaqué;5;1.5;0.7
-81;Contreplaqué;5;2.2;0.5
-82;Contreplaqué;6;1.2;1.2
-83;Poutre ;5;0.8;0.7
-84;Poutre ;3;0.5;1.9
-85;Poutre ;5;1.4;0.7
-86;Poutre ;6;0.7;0.7
-87;Poutre ;6;1.2;2
-88;Poutre ;3;1.7;1.1
-89;Poutre ;5;1.6;2.1
-90;Pneus ;3;1.3;1.7
-91;Pneus ;4;1.5;1.7
-92;Pneus ;3;1.5;1.9
-93;Pneus ;3;0.6;1.9
-94;Pneus ;5;1.8;0.5
-95;Pneus ;3;1.8;0.7
-96;Pneus ;4;1.7;1.4
-97;Pneus ;4;1.5;0.5
-98;Pneus ;2;2.1;1.8
-99;Pneus ;2;0.7;1.1
-100;Pneus ;6;1.2;1.3
+72;ContreplaquÃ©;4;1.4;2
+73;ContreplaquÃ©;5;0.6;0.5
+74;ContreplaquÃ©;5;0.6;1.8
+75;ContreplaquÃ©;4;0.7;1.4
+76;ContreplaquÃ©;6;0.5;0.7
+77;ContreplaquÃ©;3;1.5;1.8
+78;ContreplaquÃ©;3;1.4;2
+79;ContreplaquÃ©;3;2;2.3
+80;ContreplaquÃ©;5;1.5;0.7
+81;ContreplaquÃ©;5;2.2;0.5
+82;ContreplaquÃ©;6;1.2;1.2
+83;Poutre;5;0.8;0.7
+84;Poutre;3;0.5;1.9
+85;Poutre;5;1.4;0.7
+86;Poutre;6;0.7;0.7
+87;Poutre;6;1.2;2
+88;Poutre;3;1.7;1.1
+89;Poutre;5;1.6;2.1
+90;Pneus;3;1.3;1.7
+91;Pneus;4;1.5;1.7
+92;Pneus;3;1.5;1.9
+93;Pneus;3;0.6;1.9
+94;Pneus;5;1.8;0.5
+95;Pneus;3;1.8;0.7
+96;Pneus;4;1.7;1.4
+97;Pneus;4;1.5;0.5
+98;Pneus;2;2.1;1.8
+99;Pneus;2;0.7;1.1
+100;Pneus;6;1.2;1.3

@@ -11,7 +11,7 @@ DIM = {
 
 
 class Container:
-    def __init__(self, length: int=LENGTH, width: int=WIDTH, height: int=HEIGHT, dimension=3, next=None):
+    def __init__(self, length: int = LENGTH, width: int = WIDTH, height: int = HEIGHT, dimension=3, next=None):
         self.length = length
         self.width = width
         self.height = height

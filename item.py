@@ -81,7 +81,7 @@ class SortedLinkedList:
         return str(self.to_array())
 
 
-def exact_recu(items, C, k, best_mass, best_utility, best_items):
+def exact_recursion(items, C, k, best_mass, best_utility, best_items):
     current_best_utility = best_utility
     current_best_mass = best_mass
     current_best_items = best_items[:]
@@ -94,8 +94,8 @@ def exact_recu(items, C, k, best_mass, best_utility, best_items):
                 current_best_utility = new_utility
                 current_best_mass = new_mass
                 current_best_items = best_items[:] + [items[i]]
-            recu_utility, recu_mass, recu_items = exact_recu(items, C - items[i].mass, i + 1, new_mass, new_utility,
-                                                             best_items + [items[i]])
+            recu_utility, recu_mass, recu_items = exact_recursion(items, C - items[i].mass, i + 1, new_mass, new_utility,
+                                                                  best_items + [items[i]])
             if recu_utility > current_best_utility:
                 current_best_utility = recu_utility
                 current_best_mass = recu_mass
@@ -107,7 +107,7 @@ def exact_recu(items, C, k, best_mass, best_utility, best_items):
 def exact(items, C):
     C = int(C * 100)
     best_items = []
-    best_utility, best_mass, best_items = exact_recu(items, C, 0, 0, 0, best_items)
+    best_utility, best_mass, best_items = exact_recursion(items, C, 0, 0, 0, best_items)
     return best_mass, best_utility, best_items
 
 
