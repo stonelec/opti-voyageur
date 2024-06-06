@@ -121,6 +121,8 @@ def heuristic_1(items: [Item], C: float) -> [int, int, SortedLinkedList]:
             total_mass += i.mass
             total_utility += i.utility
             best_item.insert_sorted(i)
+            if total_mass == C * 100:
+                break
         else:
             for j in best_item:
                 if total_mass - j.mass + i.mass <= C * 100 and j.utility < i.utility:
@@ -143,6 +145,8 @@ def heuristic_2(items: [Item], C: float) -> [int, int, SortedLinkedList]:
             total_mass += i.mass
             total_utility += i.utility
             best_item.insert_sorted(i)
+            if total_mass == C * 100:
+                break
 
     return total_mass, total_utility, best_item
 
