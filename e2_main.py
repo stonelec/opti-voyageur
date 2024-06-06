@@ -9,8 +9,6 @@ from matplotlib.backends.backend_tkagg import (
 from matplotlib.figure import Figure
 
 root = tkinter.Tk()
-root.wm_title("Visualisation des containers")
-root.iconbitmap("logo.ico")
 
 # Dimensions des containers en decimètres
 LENGTH = int(115.83)
@@ -382,27 +380,14 @@ def print_containers(containers):
     if containers[0].dim == 3:
         print('Impossible de render des container en 3D dans la console. Merci d\'utiliser la fonction Container.render([Container])')
 
+def init_interactive():
+    root.wm_title("Visualisation des containers")
+    root.iconbitmap("logo.ico")
 
 if __name__ == '__main__':
     items = Item.list_from_csv('Données_marchandises_2324.csv')
 
-    # result[0].print_map()
-
-    # print_containers(result)
-
-    #start = time.time()
-    #result = d(items, dim=3, offline=False, realistic=False)
-    #print(time.time() - start)
-    #print(len(result))
-    #c = 0
-    #for container in result:
-    #    for item in container.items:
-    #        c += 1
-    #print(c)
-    #print_containers(result)
-    #result[0].render(result)
-    #print(len(result[1].items))
-    #tkinter.mainloop()
+    INTERACTIVE_MODE = True
 
     resultArray = [[], []]
 
@@ -416,3 +401,9 @@ if __name__ == '__main__':
         resultArray[1][i].append(time.time() - start_time)
 
     print_as_a_table(resultArray)
+
+    if INTERACTIVE_MODE:
+        containers = d(items, dim=3, offline=False)
+        init_interactive()
+        containers[0].render(containers)
+        tkinter.mainloop()
