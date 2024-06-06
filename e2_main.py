@@ -1,7 +1,7 @@
-# Dimensions des containers en millimètres
 import time
 import colored
 
+# Dimensions des containers en decimètres
 LENGTH = int(115.83)
 WIDTH = int(22.94)
 HEIGHT = int(25.69)
@@ -463,9 +463,9 @@ def get_non_used_volume(container: Container):
 def print_as_a_table(resultArray):
     for i in range(len(resultArray)):
         if i == 0:
-            headers = ["Online", "Nombre wagons", "dimension non occupée", "Temps calcul"]
+            headers = ["Online", "Nombre wagons", "dimension non occupée (dm)", "Temps calcul"]
         else:
-            headers = ["Offline", "Nombre wagons", "dimension non occupée", "Temps calcul"]
+            headers = ["Offline", "Nombre wagons", "dimension non occupée (dm)", "Temps calcul"]
         table = [headers]
 
         for d in range(len(resultArray[i])):
@@ -477,7 +477,7 @@ def print_as_a_table(resultArray):
             table.append([dim, nombre_wagons, non_occupee, temps_calcul])
 
         for row in table:
-            print("{:<10} {:<15} {:<20} {:<15}".format(*row))
+            print("{:<10} {:<15} {:<25} {:<15}".format(*row))
 
         print()
 
@@ -535,16 +535,16 @@ if __name__ == '__main__':
 
     # print_containers(result)
 
-    start = time.time()
-    result = d(items, dim=2, offline=True)
-    #result = d2_with_map_offline(items)
-    print(time.time() - start)
-    print(len(result))
-    c = 0
-    for container in result:
-        for item in container.items:
-            c += 1
-    print(c)
+    # start = time.time()
+    # result = d(items, dim=2, offline=True)
+    # result = d2_with_map_offline(items)
+    # print(time.time() - start)
+    # print(len(result))
+    # c = 0
+    # for container in result:
+    #     for item in container.items:
+    #         c += 1
+    # print(c)
 
     resultArray = [[], []]
 
@@ -571,33 +571,5 @@ if __name__ == '__main__':
         start_time = time.time()
         resultArray[1].append([d_k(items, dim=i + 1, offline=True)])
         resultArray[1][i].append(time.time() - start_time)
-
-    print_as_a_table(resultArray)
-
-    resultArray = [[], []]
-
-    start_time = time.time()
-    resultArray[0].append([d(items, dim=1, offline=False)])
-    resultArray[0][0].append(time.time() - start_time)
-
-    start_time = time.time()
-    resultArray[0].append([d(items, dim=2, offline=False)])
-    resultArray[0][1].append(time.time() - start_time)
-
-    start_time = time.time()
-    resultArray[0].append([d(items, dim=3, offline=False)])
-    resultArray[0][2].append(time.time() - start_time)
-
-    start_time = time.time()
-    resultArray[1].append([d(items, dim=1, offline=True)])
-    resultArray[1][0].append(time.time() - start_time)
-
-    start_time = time.time()
-    resultArray[1].append([d(items, dim=2, offline=True)])
-    resultArray[1][1].append(time.time() - start_time)
-
-    start_time = time.time()
-    resultArray[1].append([d(items, dim=3, offline=True)])
-    resultArray[1][2].append(time.time() - start_time)
 
     print_as_a_table(resultArray)
