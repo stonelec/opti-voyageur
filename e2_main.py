@@ -1,20 +1,24 @@
-# Dimensions des containers en millimètres
 import time
 import colored
 
 import numpy as np
 
 import tkinter
-from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.backends.backend_tkagg import (
                                     FigureCanvasTkAgg, NavigationToolbar2Tk)
 from matplotlib.figure import Figure
 
 root = tkinter.Tk()
 root.wm_title("Visualisation des containers")
-root.iconbitmap("logo.png")
+root.iconbitmap("logo.ico")
 
-
+# Dimensions des containers en decimètres
+LENGTH = int(115.83)
+WIDTH = int(22.94)
+HEIGHT = int(25.69)
+# Composante alpha du RGB du rendu 3D
+ALPHA = 0.7
+# Barre de navigation custome du rendu 3D
 class NavigationToolBarCustome(NavigationToolbar2Tk):
     toolitems = (
         ('Home', 'Reset original view', 'home', 'home'),
@@ -58,19 +62,6 @@ class NavigationToolBarCustome(NavigationToolbar2Tk):
         root.update()
         self.containers[self.container_number].render(self.containers, self.container_number)
 
-LENGTH = int(115.83)
-WIDTH = int(22.94)
-HEIGHT = int(25.69)
-
-DIM = {
-    1: 'length',
-    2: 'area',
-    3: 'volume',
-}
-
-ALPHA = 0.7
-
-
 class Container:
     def __init__(self, length: int = LENGTH, width: int = WIDTH, height: int = HEIGHT, dimension=3, next=None):
         self.length = length
@@ -79,7 +70,7 @@ class Container:
         self.area = length * width
         self.volume = length * width * height
 
-        self.items = SortedLinkedList(DIM[dimension])
+        self.items = []
         self.used_length = 0
         self.used_area = 0
         self.used_volume = 0
@@ -87,29 +78,111 @@ class Container:
         self.dim = dimension
 
         if dimension == 1:
-            self.map = [0 for _ in range(self.length)]
+            self.map = [0 for _ in range(length)]
         elif dimension == 2:
-            self.map = [[0 for _ in range(self.width)] for _ in range(self.length)]
+            self.map = [[0 for _ in range(width)] for _ in range(length)]
         elif dimension == 3:
-            self.map = [[[0 for _ in range(self.width)] for _ in range(self.length)] for _ in range(self.height)]
+            self.map = [[[0 for _ in range(width)] for _ in range(length)] for _ in range(height)]
 
     def __str__(self):
         return f'({self.length} m * {self.width} m * {self.height} m)'
-
+    # Verifie si il y a assez de place pour poser l'objet à la position donner (coin superieur gauche de l'item)
+    def check_enough_space(self, item, i=0, j=0, k=0):
+        if self.dim == 1:
+            return (self.length - j - item.length) >= 0
+        if self.dim == 2:
+            for y in range(j, j + item.length):
+                for x in range(i, i + item.width):
+                    if self.map[y][x] != 0:
+                        return False
+            return True
+        if self.dim == 3:
+            for z in range(k, k + item.height-1):
+                for y in range(j, j + item.length-1):
+                    for x in range(i, i + item.width-1):
+                        if self.map[z][y][x] != 0:
+                            return False
+            return True
+    # Rempli le mapping avec l'ID de l'item à l'endroit ou on le pose
+    def fill_item(self, item):
+        if self.dim == 1:
+            for j in range(self.length - item.length + 1):
+                if self.map[j] == 0:
+                    if self.check_enough_space(item, j=j):
+                        for y in range(item.length):
+                            self.map[y + j] = item.id
+                        return True
+            return False
+        if self.dim == 2:
+            for j in range(self.length - item.length + 1):
+                for i in range(self.width - item.width + 1):
+                    if self.map[j][i] == 0:
+                        if self.check_enough_space(item, j=j, i=i):
+                            for y in range(item.length):
+                                for x in range(item.width):
+                                    self.map[y + j][x + i] = item.id
+                            return True
+            return False
+        if self.dim == 3:
+            for k in range(self.height - item.height + 1):
+                for j in range(self.length - item.length + 1):
+                    for i in range(self.width - item.width + 1):
+                        if self.map[k][j][i] == 0:
+                            if self.check_enough_space(item, j=j, i=i, k=k):
+                                for z in range(k, k + item.height):
+                                    for y in range(j, j + item.length):
+                                        for x in range(i, i + item.width):
+                                            self.map[z][y][x] = item.id
+                                return True
+            return False
+    # Ajoute un item selon le nombre de dimension choisi dans le container
+    # return False si impossible
     def add_item(self, item):
-        self.items.insert_sorted(item)
-        self.used_length += item.length
-
-    def remove_item(self, item):
-        self.items.remove(item)
-        self.used_length -= item.length
-
+        if self.fill_item(item):
+            if self.dim == 1:
+                self.items.append(item)
+                self.used_length += item.length
+                return True
+            if self.dim == 2:
+                self.items.append(item)
+                self.used_area += item.area
+                return True
+            if self.dim == 3:
+                self.items.append(item)
+                self.used_volume += item.volume
+                return True
+        return False
+    # Renvoie l'espace non utilisé dans le container selon la dimension
+    def get_not_used_volume(self):
+        if self.dim == 1:
+            return self.length - self.used_length
+        if self.dim == 2:
+            return self.area - self.used_area
+        if self.dim == 3:
+            return self.volume - self.used_volume
+    # Rendu 2D dans la console
+    def print_map(self):
+        # Taille en charactère d'un nombre
+        cell_width = 3
+        for row in self.map:
+            print('| ', end='')
+            for col in row:
+                if col != 0:
+                    color = colored.fg(col % 256)
+                    print(colored.stylize(f'{col:>{cell_width}}', color), end='')
+                else:
+                    print('_', end='')
+            print(' |')
+    # Rendu 3D selon 1 à 3 dimension
     def render(self, containers, container_number=0):
+        # Figure dans la quel faire le rendu
         fig = Figure(figsize=(8, 6), dpi=100)
-        frame = FigureCanvasTkAgg(fig, master=root)  # A tk.DrawingArea.
-        # Create axis
+        frame = FigureCanvasTkAgg(fig, master=root)
+        # Les dimensions des axes de la figure qui correspondent aux dimensions du container
         axes = [23, 116, 26]
+        # Matrice 3D contenant items à coloré
         render_map = np.empty(axes, dtype=bool)
+        # Matrice 3D contenant les couleurs des items
         colors = np.empty(axes + [4], dtype=np.float32)
         if self.dim == 3:
             for k in range(self.height):
@@ -118,6 +191,7 @@ class Container:
                         if self.map[k][j][i] != 0:
                             id = self.map[k][j][i]
                             render_map[i][j][k] = True
+                            # Choisit une couleur selon l'id de l'item
                             colors[i][j][k] = ((id*10%256)/256 if id%3==0 else 0, (id*10%256)/256 if id%3==1 else 0, (id*10%256)/256 if id%3==2 else 0, ALPHA)
         elif self.dim == 2:
             for j in range(self.length):
@@ -137,136 +211,25 @@ class Container:
                         colors[0][j][0] = (
                         (id * 10 % 256) / 256 if id % 3 == 0 else 0, (id * 10 % 256) / 256 if id % 3 == 1 else 0,
                         (id * 10 % 256) / 256 if id % 3 == 2 else 0, ALPHA)
-
+        # Paramétrage des axes du rendu 3D
         ax = fig.add_subplot(111, projection='3d')
+        # Parametrage des bornes des axes
         ax.axes.set_xlim([0, 22])
         ax.axes.set_ylim([115, 0])
         ax.axes.set_zlim([0, 25])
+        # Parametrage des label des axes
         ax.set_xlabel('Largeur')
         ax.set_ylabel('Longueur')
         ax.set_zlabel('Hauteur')
+        # Parametres les axes pour être de meme norme
         ax.set_aspect('equal', adjustable='box')
-        # Voxels is used to customizations of the
-        # sizes, positions and colors.
+        # Ajout du voxel contenant tous les items et leur couleur sur le rendu 3D
         ax.voxels(render_map, facecolors=colors)
-
+        # Ajour d'une barre de navigation sous le rendu 3D
         toolbar = NavigationToolBarCustome(containers, container_number, frame, root)
         toolbar.update()
+
         frame.get_tk_widget().pack(side=tkinter.TOP, fill=tkinter.BOTH, expand=1)
-
-class Container2(Container):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.items = []
-        if self.dim == 1:
-            self.map = [0 for _ in range(self.length)]
-        elif self.dim == 2:
-            self.map = [[0 for _ in range(self.width)] for _ in range(self.length)]
-        elif self.dim == 3:
-            self.map = [[[0 for _ in range(self.width)] for _ in range(self.length)] for _ in range(self.height)]
-
-    def check_enough_space(self, item, i=0, j=0, k=0, realistic: bool = False):
-        if self.dim == 1:
-            return (self.length - j - item.length) >= 0
-        if self.dim == 2:
-            for y in range(j, j + item.length):
-                for x in range(i, i + item.width):
-                    if self.map[y][x] != 0:
-                        return False
-            if realistic:
-                for y in range(j+item.length, self.length):
-                    for x in range(i, i + item.width):
-                        if self.map[y][x] != 0:
-                            return False
-            return True
-        if self.dim == 3:
-            for z in range(k, k + item.height-1):
-                for y in range(j, j + item.length-1):
-                    for x in range(i, i + item.width-1):
-                        if self.map[z][y][x] != 0:
-                            return False
-            if realistic:
-                for z in range(k, k + item.height):
-                    for y in range(j + item.length, self.length):
-                        for x in range(i, i + item.width):
-                            if self.map[z][y][x] != 0:
-                                return False
-            return True
-
-    def fill_item(self, item, realistic: bool = False):
-        if self.dim == 1:
-            for j in range(self.length - item.length + 1):
-                if self.map[j] == 0:
-                    if self.check_enough_space(item, j=j, realistic=realistic):
-                        for y in range(item.length):
-                            self.map[y + j] = item.id
-                        return True
-            return False
-        if self.dim == 2:
-            for j in range(self.length - item.length + 1):
-                for i in range(self.width - item.width + 1):
-                    if self.map[j][i] == 0:
-                        if self.check_enough_space(item, j=j, i=i, realistic=realistic):
-                            for y in range(item.length):
-                                for x in range(item.width):
-                                    self.map[y + j][x + i] = item.id
-                            return True
-            return False
-        if self.dim == 3:
-            for k in range(self.height - item.height + 1):
-                for j in range(self.length - item.length + 1):
-                    for i in range(self.width - item.width + 1):
-                        if self.map[k][j][i] == 0:
-                            if self.check_enough_space(item, j=j, i=i, k=k, realistic=realistic):
-                                for z in range(k, k + item.height):
-                                    for y in range(j, j + item.length):
-                                        for x in range(i, i + item.width):
-                                            self.map[z][y][x] = item.id
-                                return True
-            return False
-
-
-    def add_item_1D(self, item, realistic: bool = False):
-        if self.fill_item(item, realistic):
-            self.items.append(item)
-            self.used_length += item.length
-            return True
-        return False
-
-    def add_item_2D(self, item, realistic: bool = False):
-        if self.fill_item(item, realistic=realistic):
-            self.items.append(item)
-            self.used_area += item.area
-            return True
-        return False
-
-    def add_item_3D(self, item, realistic: bool = False):
-        if self.fill_item(item, realistic=realistic):
-            self.items.append(item)
-            self.used_volume += item.volume
-            return True
-        return False
-
-    def add_item(self, item, realistic: bool = False):
-        if self.dim == 1:
-            return self.add_item_1D(item, realistic=realistic)
-        if self.dim == 2:
-            return self.add_item_2D(item, realistic=realistic)
-        if self.dim == 3:
-            return self.add_item_3D(item, realistic=realistic)
-        return False
-
-    def print_map(self):
-        cell_width = 3  # Fixed width for each cell
-        for row in self.map:
-            print('| ', end='')
-            for col in row:
-                if col != 0:
-                    color = colored.fg(col % 256)
-                    print(colored.stylize(f'{col:>{cell_width}}', color), end='')
-                else:
-                    print('_', end='')
-            print(' |')
 
 
 class Item:
@@ -294,66 +257,6 @@ class Item:
             print(f'File {filename} not found')
 
         return item_list
-
-
-class SortedLinkedList:
-    def __init__(self, sorting):
-        self.head = None
-        self.sorting = sorting
-
-    def insert_sorted(self, data):
-        new_node = data
-        if self.head is None or getattr(self.head, self.sorting) > getattr(data, self.sorting):
-            new_node.next = self.head
-            self.head = new_node
-            return
-        current = self.head
-        while current.next and getattr(current.next, self.sorting) <= getattr(data, self.sorting):
-            current = current.next
-        new_node.next = current.next
-        current.next = new_node
-
-    def remove(self, data):
-        if self.head is None:
-            return
-        if self.head == data:
-            self.head = self.head.next
-            return
-        current = self.head
-        while current.next and current.next != data:
-            current = current.next
-
-        if current.next:
-            current.next = current.next.next
-
-    def __iter__(self):
-        self._current = self.head
-        return self
-
-    def __next__(self):
-        if self._current is None:
-            raise StopIteration
-        else:
-            data = self._current
-            self._current = self._current.next
-            return data
-
-    def print_list(self):
-        current = self.head
-        while current:
-            print(current)
-            current = current.next
-
-    def to_array(self):
-        array = []
-        current = self.head
-        while current:
-            array.append(current.data)
-            current = current.next
-        return array
-
-    def __str__(self):
-        return str(self.to_array())
 
 
 def d1(items: [Item]) -> [Item]:
@@ -391,7 +294,7 @@ def d1(items: [Item]) -> [Item]:
     return containers
 
 
-def d(items: [Item], dim: int = 3, offline: bool = False, realistic: bool = False) -> [Container2]:
+def d(items: [Item], dim: int = 3, offline: bool = False) -> [Container]:
     containers = []
     if offline:
         if dim == 1:
@@ -405,183 +308,26 @@ def d(items: [Item], dim: int = 3, offline: bool = False, realistic: bool = Fals
         keep_going = True
         while keep_going:
             if len(containers) == j:
-                containers.append(Container2(dimension=dim))
+                containers.append(Container(dimension=dim))
                 inserted = containers[j].add_item(item)
                 if inserted:
                     keep_going = False
             elif dim == 1:
-                inserted = containers[j].add_item(item, realistic)
+                inserted = containers[j].add_item(item)
                 if inserted:
                     keep_going = False
             elif dim == 2:
                 if (containers[j].area - containers[j].used_area) >= item.area:
-                    inserted = containers[j].add_item(item, realistic)
+                    inserted = containers[j].add_item(item)
                     if inserted:
                         keep_going = False
             elif dim == 3:
                 if (containers[j].volume - containers[j].used_volume) >= item.volume:
-                    inserted = containers[j].add_item(item, realistic)
+                    inserted = containers[j].add_item(item)
                     if inserted:
                         keep_going = False
             j += 1
     return containers
-
-
-def d1_with_map_online(items: [Item]):
-    containers = []
-    for i in items:
-        item_added = False
-        for j in containers:
-            if j.length - j.used_length >= i.length:
-                for k in range(j.length - i.length + 1):
-                    if check_if_can_add(j, i, k):
-                        for l in range(i.length):
-                            j.map[k + l] = i.id
-                        j.items.insert_sorted(i)
-                        j.used_length += i.length
-                        item_added = True
-                        break
-                if item_added:
-                    break
-
-        if not item_added:
-            containers.append(Container(dimension=1))
-            containers[len(containers) - 1].items.insert_sorted(i)
-            containers[len(containers) - 1].used_length += i.length
-            for l in range(i.length):
-                containers[len(containers) - 1].map[l] = i.id
-
-    return containers
-
-
-def d1_with_map_offline(items: [Item]):
-    return d1_with_map_online(sorted(items, reverse=True, key=lambda x: x.length))
-
-
-def d2_with_map_online(items: [Item]):
-    containers = []
-    for i in items:
-        item_added = False
-        for j in containers:
-            if j.area - j.used_area >= i.area:
-                for k in range(j.length - i.length + 1):
-                    for l in range(j.width - i.width + 1):
-                        if check_if_can_add(j, i, k, l):
-                            for m in range(i.length):
-                                for n in range(i.width):
-                                    j.map[k + m][l + n] = i.id
-                            j.items.insert_sorted(i)
-                            j.used_area += i.area
-                            item_added = True
-                            break
-                    if item_added:
-                        break
-                if item_added:
-                    break
-
-        if not item_added:
-            containers.append(Container(dimension=2))
-            containers[len(containers) - 1].items.insert_sorted(i)
-            containers[len(containers) - 1].used_area += i.area
-            for l in range(i.length):
-                for m in range(i.width):
-                    containers[len(containers) - 1].map[l][m] = i.id
-
-    return containers
-
-
-def d2_with_map_offline(items: [Item]):
-    return d2_with_map_online(sorted(items, reverse=True, key=lambda x: x.area))
-
-
-def d3_with_map_online(items: [Item]):
-    containers = []
-    for i in items:
-        item_added = False
-        for j in containers:
-            if j.volume - j.used_volume >= i.volume:
-                for k in range(j.length - i.length + 1):
-                    for l in range(j.width - i.width + 1):
-                        for m in range(j.height - i.height + 1):
-                            if check_if_can_add(j, i, k, l, m):
-                                for n in range(i.length):
-                                    for o in range(i.width):
-                                        for p in range(i.height):
-                                            j.map[k + n][l + o][m + p] = i.id
-                                j.items.insert_sorted(i)
-                                j.used_volume += i.volume
-                                item_added = True
-                                break
-                        if item_added:
-                            break
-                    if item_added:
-                        break
-                if item_added:
-                    break
-
-        if not item_added:
-            containers.append(Container(dimension=3))
-            containers[len(containers) - 1].items.insert_sorted(i)
-            containers[len(containers) - 1].used_volume += i.volume
-            for l in range(i.length):
-                for m in range(i.width):
-                    for n in range(i.height):
-                        containers[len(containers) - 1].map[l][m][n] = i.id
-
-    return containers
-
-
-def d3_with_map_offline(items: [Item]):
-    return d3_with_map_online(sorted(items, reverse=True, key=lambda x: x.volume))
-
-
-def check_if_can_add(container: Container, item: Item, x=0, y=0, z=0):
-    if container.dim == 1:
-        if container.map[x] != 0:
-            return False
-        for i in range(x, x + item.length):
-            if container.map[i] != 0:
-                return False
-    if container.dim == 2:
-        if container.map[x][y] != 0:
-            return False
-        for i in range(x, x + item.length):
-            for j in range(y, y + item.width):
-                if container.map[i][j] != 0:
-                    return False
-    if container.dim == 3:
-        if container.map[x][y][z] != 0:
-            return False
-        for i in range(x, x + item.length):
-            for j in range(y, y + item.width):
-                for k in range(z, z + item.height):
-                    if container.map[i][j][k] != 0:
-                        return False
-    return True
-
-
-def get_non_used_volume(container: Container):
-    if container.dim == 1:
-        res = 0
-        for i in container.map:
-            if i == 0:
-                res += 1
-        return res
-    if container.dim == 2:
-        res = 0
-        for i in container.map:
-            for j in i:
-                if j == 0:
-                    res += 1
-        return res
-    if container.dim == 3:
-        res = 0
-        for i in container.map:
-            for j in i:
-                for k in j:
-                    if k == 0:
-                        res += 1
-        return res
 
 
 def print_as_a_table(resultArray):
@@ -595,7 +341,7 @@ def print_as_a_table(resultArray):
         for d in range(len(resultArray[i])):
             dim = f"d={d + 1}"
             nombre_wagons = len(resultArray[i][d][0])
-            non_occupee = sum(get_non_used_volume(c) for c in resultArray[i][d][0])
+            non_occupee = sum(c.get_not_used_volume() for c in resultArray[i][d][0])
             temps_calcul = resultArray[i][d][1]
 
             table.append([dim, nombre_wagons, non_occupee, temps_calcul])
@@ -607,8 +353,7 @@ def print_as_a_table(resultArray):
 
 
 def print_containers(containers):
-    nb_rows = LENGTH
-    cell_width = 3  # Fixed width for each cell
+    cell_width = 3
     if containers[0].dim == 1:
         for container in containers:
             row = container.map
@@ -621,6 +366,7 @@ def print_containers(containers):
                     print('_' * cell_width, end='')
             print(' |')
     if containers[0].dim == 2:
+        nb_rows = containers[0].length
         for i in range(nb_rows):
             for container in containers:
                 row = container.map[i]
@@ -634,24 +380,7 @@ def print_containers(containers):
                 print(' |   ', end='')
             print()
     if containers[0].dim == 3:
-        print('Impossible de render un container 3D dans la console')
-
-
-def d_k(items: [Item], dim: int = 3, offline: bool = False):
-    if offline:
-        if dim == 1:
-            return d1_with_map_offline(items)
-        if dim == 2:
-            return d2_with_map_offline(items)
-        if dim == 3:
-            return d3_with_map_offline(items)
-    else:
-        if dim == 1:
-            return d1_with_map_online(items)
-        if dim == 2:
-            return d2_with_map_online(items)
-        if dim == 3:
-            return d3_with_map_online(items)
+        print('Impossible de render des container en 3D dans la console. Merci d\'utiliser la fonction Container.render([Container])')
 
 
 if __name__ == '__main__':
@@ -687,38 +416,4 @@ if __name__ == '__main__':
         resultArray[1].append([d(items, dim=i + 1, offline=True)])
         resultArray[1][i].append(time.time() - start_time)
 
-    print('d(items, dim=i, offline=False/True, realistic=False)')
-    print_as_a_table(resultArray)
-
-    resultArray.clear()
-
-    resultArray = [[], []]
-
-    for i in range(3):
-
-        start_time = time.time()
-        resultArray[0].append([d(items, dim=i + 1, offline=False, realistic=True)])
-        resultArray[0][i].append(time.time() - start_time)
-
-        start_time = time.time()
-        resultArray[1].append([d(items, dim=i + 1, offline=True, realistic=True)])
-        resultArray[1][i].append(time.time() - start_time)
-
-    print('d(items, dim=i, offline=False/True, realistic=True)')
-    print_as_a_table(resultArray)
-
-    resultArray.clear()
-
-    resultArray = [[], []]
-
-    for i in range(3):
-        start_time = time.time()
-        resultArray[0].append([d_k(items, dim=i + 1, offline=False)])
-        resultArray[0][i].append(time.time() - start_time)
-
-        start_time = time.time()
-        resultArray[1].append([d_k(items, dim=i + 1, offline=True)])
-        resultArray[1][i].append(time.time() - start_time)
-
-    print('d_k(items, dim=i, offline=False/True)')
     print_as_a_table(resultArray)
