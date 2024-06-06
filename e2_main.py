@@ -15,7 +15,7 @@ LENGTH = int(115.83)
 WIDTH = int(22.94)
 HEIGHT = int(25.69)
 # Composante alpha du RGB du rendu 3D
-ALPHA = 0.7
+ALPHA = 0.8
 # Barre de navigation custome du rendu 3D
 class NavigationToolBarCustome(NavigationToolbar2Tk):
     toolitems = (
@@ -170,7 +170,7 @@ class Container:
     # Rendu 3D selon 1 à 3 dimension
     def render(self, containers, container_number=0):
         # Figure dans la quel faire le rendu
-        fig = Figure(figsize=(8, 6), dpi=100)
+        fig = Figure(figsize=(10, 6), dpi=100)
         frame = FigureCanvasTkAgg(fig, master=root)
         # Les dimensions des axes de la figure qui correspondent aux dimensions du container
         axes = [23, 116, 26]
@@ -207,6 +207,7 @@ class Container:
                         (id * 10 % 256) / 256 if id % 3 == 2 else 0, ALPHA)
         # Paramétrage des axes du rendu 3D
         ax = fig.add_subplot(111, projection='3d')
+        ax.set_title(f'Container {container_number}')
         # Parametrage des bornes des axes
         ax.axes.set_xlim([0, 22])
         ax.axes.set_ylim([115, 0])
@@ -385,6 +386,7 @@ if __name__ == '__main__':
     items = Item.list_from_csv('Données_marchandises_2324.csv')
 
     INTERACTIVE_MODE = True
+    CONSOLE_MODE = True
 
     resultArray = [[], []]
 
@@ -399,9 +401,10 @@ if __name__ == '__main__':
 
     print_as_a_table(resultArray)
 
+    result = d(items, dim=1, offline=False)
+    if CONSOLE_MODE:
+        print_containers(result)
     if INTERACTIVE_MODE:
-        containers = d(items, dim=1, offline=False)
-        print_containers(containers)
         init_interactive()
-        containers[0].render(containers)
+        result[0].render(result)
         tkinter.mainloop()
