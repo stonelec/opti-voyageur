@@ -104,13 +104,9 @@ class Container:
     # Rempli le mapping avec l'ID de l'item à l'endroit ou on le pose
     def fill_item(self, item):
         if self.dim == 1:
-            for j in range(self.length - item.length + 1):
-                if self.map[j] == 0:
-                    if self.check_enough_space(item, j=j):
-                        for y in range(item.length):
-                            self.map[y + j] = item.id
-                        return True
-            return False
+            for j in range(self.used_length, self.used_length + item.length):
+                self.map[j] = item.id
+            return True
         if self.dim == 2:
             for j in range(self.length - item.length + 1):
                 for i in range(self.width - item.width + 1):
@@ -311,9 +307,10 @@ def d(items: [Item], dim: int = 3, offline: bool = False) -> [Container]:
                 if inserted:
                     keep_going = False
             elif dim == 1:
-                inserted = containers[j].add_item(item)
-                if inserted:
-                    keep_going = False
+                if (containers[j].length - containers[j].used_length) >= item.length:
+                    inserted = containers[j].add_item(item)
+                    if inserted:
+                        keep_going = False
             elif dim == 2:
                 if (containers[j].area - containers[j].used_area) >= item.area:
                     inserted = containers[j].add_item(item)
@@ -403,7 +400,8 @@ if __name__ == '__main__':
     print_as_a_table(resultArray)
 
     if INTERACTIVE_MODE:
-        containers = d(items, dim=3, offline=False)
+        containers = d(items, dim=1, offline=False)
+        print_containers(containers)
         init_interactive()
         containers[0].render(containers)
         tkinter.mainloop()
