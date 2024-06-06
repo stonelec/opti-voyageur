@@ -12,20 +12,15 @@ def main():
     for i in C:
         print("Running algo for C = ", i)
 
+        start = time.time()
         total_mass, total_utility, best_item = item.exact(item_list, i)
+        end = time.time()
 
         print("     ", "total mass : ", total_mass / 100, "total utility : ", total_utility / 100, "\n")
         for i in best_item:
             print("     ", i)
 
-        time_moy = 0
-        n = 4
-        for i in range(n):
-            start = time.time()
-            item.exact(item_list, i)
-            time_moy += time.time() - start
-
-        print("     ", time_moy / n, "\n")
+        print("     ", end - start, "\n")
 
     print("Heuristic 2 algorithm")
 

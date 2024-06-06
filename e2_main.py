@@ -333,9 +333,9 @@ def d(items: [Item], dim: int = 3, offline: bool = False) -> [Container]:
 def print_as_a_table(resultArray):
     for i in range(len(resultArray)):
         if i == 0:
-            headers = ["Online", "Nombre wagons", "dimension non occupée", "Temps calcul"]
+            headers = ["Online", "Nombre wagons", "dimension non occupée (dm)", "Temps calcul"]
         else:
-            headers = ["Offline", "Nombre wagons", "dimension non occupée", "Temps calcul"]
+            headers = ["Offline", "Nombre wagons", "dimension non occupée (dm)", "Temps calcul"]
         table = [headers]
 
         for d in range(len(resultArray[i])):
@@ -347,7 +347,7 @@ def print_as_a_table(resultArray):
             table.append([dim, nombre_wagons, non_occupee, temps_calcul])
 
         for row in table:
-            print("{:<10} {:<15} {:<20} {:<15}".format(*row))
+            print("{:<10} {:<15} {:<25} {:<15}".format(*row))
 
         print()
 
@@ -392,7 +392,6 @@ if __name__ == '__main__':
 
     #start = time.time()
     #result = d(items, dim=3, offline=False, realistic=False)
-    #result = d3_with_map_offline(items)
     #print(time.time() - start)
     #print(len(result))
     #c = 0
