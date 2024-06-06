@@ -2,7 +2,6 @@
 import time
 import colored
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 import tkinter
@@ -12,10 +11,8 @@ from matplotlib.backends.backend_tkagg import (
 from matplotlib.figure import Figure
 
 root = tkinter.Tk()
-root.wm_title("Embedding in Tk")
-
-canvas = tkinter.Canvas(root, width=500, height=500, bg='white')
-canvas.pack()
+root.wm_title("Visualisation des containers")
+root.iconbitmap("logo.png")
 
 
 class NavigationToolBarCustome(NavigationToolbar2Tk):
@@ -55,10 +52,10 @@ class NavigationToolBarCustome(NavigationToolbar2Tk):
         self._update_render()
 
     def _update_render(self):
-        if canvas.winfo_children():
-            for child in canvas.winfo_children():
+        if root.winfo_children():
+            for child in root.winfo_children():
                 child.destroy()
-        canvas.update()
+        root.update()
         self.containers[self.container_number].render(self.containers, self.container_number)
 
 LENGTH = int(115.83)
@@ -109,7 +106,7 @@ class Container:
 
     def render(self, containers, container_number=0):
         fig = Figure(figsize=(8, 6), dpi=100)
-        frame = FigureCanvasTkAgg(fig, master=canvas)  # A tk.DrawingArea.
+        frame = FigureCanvasTkAgg(fig, master=root)  # A tk.DrawingArea.
         # Create axis
         axes = [23, 116, 26]
         render_map = np.empty(axes, dtype=bool)
@@ -153,7 +150,7 @@ class Container:
         # sizes, positions and colors.
         ax.voxels(render_map, facecolors=colors)
 
-        toolbar = NavigationToolBarCustome(containers, container_number, frame, canvas)
+        toolbar = NavigationToolBarCustome(containers, container_number, frame, root)
         toolbar.update()
         frame.get_tk_widget().pack(side=tkinter.TOP, fill=tkinter.BOTH, expand=1)
 
@@ -664,21 +661,21 @@ if __name__ == '__main__':
 
     # print_containers(result)
 
-    start = time.time()
-    result = d(items, dim=1, offline=False, realistic=False)
+    #start = time.time()
+    #result = d(items, dim=3, offline=False, realistic=False)
     #result = d3_with_map_offline(items)
-    print(time.time() - start)
-    print(len(result))
-    c = 0
-    for container in result:
-        for item in container.items:
-            c += 1
-    print(c)
+    #print(time.time() - start)
+    #print(len(result))
+    #c = 0
+    #for container in result:
+    #    for item in container.items:
+    #        c += 1
+    #print(c)
     #print_containers(result)
-    result[0].render(result)
-    print(len(result[1].items))
-    tkinter.mainloop()
-    '''
+    #result[0].render(result)
+    #print(len(result[1].items))
+    #tkinter.mainloop()
+
     resultArray = [[], []]
 
     for i in range(3):
@@ -725,4 +722,3 @@ if __name__ == '__main__':
 
     print('d_k(items, dim=i, offline=False/True)')
     print_as_a_table(resultArray)
-    '''
