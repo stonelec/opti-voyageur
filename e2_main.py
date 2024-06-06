@@ -32,8 +32,7 @@ class NavigationToolBarCustome(NavigationToolbar2Tk):
         ('Subplots', 'Configure subplots', 'subplots', 'configure_subplots'),
         (None, None, None, None),
         ('Save', 'Save the figure', 'filesave', 'save_figure'),
-        ('Minus', 'Item suivant', 'back', 'prev_item'),
-        ('Plus', 'Item suivant', 'forward', 'nex_item'),
+        (None, None, None, None),
         ('Previous', 'Containers précedent', 'back', 'prev_container'),
         ('Next', 'Containers suivant', 'forward', 'next_container'),
       )
@@ -43,28 +42,23 @@ class NavigationToolBarCustome(NavigationToolbar2Tk):
         self.containers = containers
         self.container_number = container_number
 
-    def prev_item(self, *args):
-        pass
-
-    def nex_item(self, *args):
-        pass
-
     def prev_container(self, *args):
         if self.container_number == 0:
             self.container_number = len(self.containers)
-        else:
-            self.container_number -= 1
+        self.container_number -= 1
         self._update_render()
 
     def next_container(self, *args):
         self.container_number += 1
-        self.container_number %= len(self.containers)
+        if self.container_number == len(self.containers):
+            self.container_number = 0
         self._update_render()
 
     def _update_render(self):
-        #if canvas.winfo_children():
-        #    for child in canvas.winfo_children():
-        #        child.destroy()
+        if canvas.winfo_children():
+            for child in canvas.winfo_children():
+                child.destroy()
+        canvas.update()
         self.containers[self.container_number].render(self.containers, self.container_number)
 
 LENGTH = int(115.83)
@@ -77,7 +71,7 @@ DIM = {
     3: 'volume',
 }
 
-ALPHA = 1
+ALPHA = 0.7
 
 
 class Container:
@@ -116,21 +110,37 @@ class Container:
     def render(self, containers, container_number=0):
         fig = Figure(figsize=(8, 6), dpi=100)
         frame = FigureCanvasTkAgg(fig, master=canvas)  # A tk.DrawingArea.
-        frame.draw()
         # Create axis
         axes = [23, 116, 26]
         render_map = np.empty(axes, dtype=bool)
         colors = np.empty(axes + [4], dtype=np.float32)
-        for k in range(self.height):
+        if self.dim == 3:
+            for k in range(self.height):
+                for j in range(self.length):
+                    for i in range(self.width):
+                        if self.map[k][j][i] != 0:
+                            id = self.map[k][j][i]
+                            render_map[i][j][k] = True
+                            colors[i][j][k] = ((id*10%256)/256 if id%3==0 else 0, (id*10%256)/256 if id%3==1 else 0, (id*10%256)/256 if id%3==2 else 0, ALPHA)
+        elif self.dim == 2:
             for j in range(self.length):
                 for i in range(self.width):
-                    if self.map[k][j][i] != 0:
-                        id = self.map[k][j][i]
-                        render_map[i][j][k] = True
-                        colors[i][j][k] = ((id*10%256)/256 if id%3==0 else 0, (id*10%256)/256 if id%3==1 else 0, (id*10%256)/256 if id%3==2 else 0, ALPHA)
+                    if self.map[j][i] != 0:
+                        id = self.map[j][i]
+                        render_map[i][j][0] = True
+                        colors[i][j][0] = (
+                        (id * 10 % 256) / 256 if id % 3 == 0 else 0, (id * 10 % 256) / 256 if id % 3 == 1 else 0,
+                        (id * 10 % 256) / 256 if id % 3 == 2 else 0, ALPHA)
+        elif self.dim == 1:
+            for j in range(self.length):
+                for i in range(self.width):
+                    if self.map[j] != 0:
+                        id = self.map[j]
+                        render_map[0][j][0] = True
+                        colors[0][j][0] = (
+                        (id * 10 % 256) / 256 if id % 3 == 0 else 0, (id * 10 % 256) / 256 if id % 3 == 1 else 0,
+                        (id * 10 % 256) / 256 if id % 3 == 2 else 0, ALPHA)
 
-        fig.clear()
-        fig.canvas.draw()
         ax = fig.add_subplot(111, projection='3d')
         ax.axes.set_xlim([0, 22])
         ax.axes.set_ylim([115, 0])
@@ -138,6 +148,7 @@ class Container:
         ax.set_xlabel('Largeur')
         ax.set_ylabel('Longueur')
         ax.set_zlabel('Hauteur')
+        ax.set_aspect('equal', adjustable='box')
         # Voxels is used to customizations of the
         # sizes, positions and colors.
         ax.voxels(render_map, facecolors=colors)
@@ -654,7 +665,7 @@ if __name__ == '__main__':
     # print_containers(result)
 
     start = time.time()
-    result = d(items, dim=3, offline=False, realistic=False)
+    result = d(items, dim=1, offline=False, realistic=False)
     #result = d3_with_map_offline(items)
     print(time.time() - start)
     print(len(result))
