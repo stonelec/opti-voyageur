@@ -2,6 +2,71 @@
 import time
 import colored
 
+import matplotlib.pyplot as plt
+import numpy as np
+
+import tkinter
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.backends.backend_tkagg import (
+                                    FigureCanvasTkAgg, NavigationToolbar2Tk)
+from matplotlib.figure import Figure
+
+root = tkinter.Tk()
+root.wm_title("Embedding in Tk")
+
+canvas = tkinter.Canvas(root, width=500, height=500, bg='white')
+canvas.pack()
+
+
+class NavigationToolBarCustome(NavigationToolbar2Tk):
+    toolitems = (
+        ('Home', 'Reset original view', 'home', 'home'),
+        ('Back', 'Back to previous view', 'back', 'back'),
+        ('Forward', 'Forward to next view', 'forward', 'forward'),
+        (None, None, None, None),
+        ('Pan',
+         'Left button pans, Right button zooms\n'
+         'x/y fixes axis, CTRL fixes aspect',
+         'move', 'pan'),
+        ('Zoom', 'Zoom to rectangle\nx/y fixes axis', 'zoom_to_rect', 'zoom'),
+        ('Subplots', 'Configure subplots', 'subplots', 'configure_subplots'),
+        (None, None, None, None),
+        ('Save', 'Save the figure', 'filesave', 'save_figure'),
+        ('Minus', 'Item suivant', 'back', 'prev_item'),
+        ('Plus', 'Item suivant', 'forward', 'nex_item'),
+        ('Previous', 'Containers précedent', 'back', 'prev_container'),
+        ('Next', 'Containers suivant', 'forward', 'next_container'),
+      )
+
+    def __init__(self, containers, container_number=0, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.containers = containers
+        self.container_number = container_number
+
+    def prev_item(self, *args):
+        pass
+
+    def nex_item(self, *args):
+        pass
+
+    def prev_container(self, *args):
+        if self.container_number == 0:
+            self.container_number = len(self.containers)
+        else:
+            self.container_number -= 1
+        self._update_render()
+
+    def next_container(self, *args):
+        self.container_number += 1
+        self.container_number %= len(self.containers)
+        self._update_render()
+
+    def _update_render(self):
+        #if canvas.winfo_children():
+        #    for child in canvas.winfo_children():
+        #        child.destroy()
+        self.containers[self.container_number].render(self.containers, self.container_number)
+
 LENGTH = int(115.83)
 WIDTH = int(22.94)
 HEIGHT = int(25.69)
@@ -11,6 +76,8 @@ DIM = {
     2: 'area',
     3: 'volume',
 }
+
+ALPHA = 1
 
 
 class Container:
@@ -33,7 +100,7 @@ class Container:
         elif dimension == 2:
             self.map = [[0 for _ in range(self.width)] for _ in range(self.length)]
         elif dimension == 3:
-            self.map = [[[0 for _ in range(self.height)] for _ in range(self.width)] for _ in range(self.length)]
+            self.map = [[[0 for _ in range(self.width)] for _ in range(self.length)] for _ in range(self.height)]
 
     def __str__(self):
         return f'({self.length} m * {self.width} m * {self.height} m)'
@@ -46,13 +113,51 @@ class Container:
         self.items.remove(item)
         self.used_length -= item.length
 
+    def render(self, containers, container_number=0):
+        fig = Figure(figsize=(8, 6), dpi=100)
+        frame = FigureCanvasTkAgg(fig, master=canvas)  # A tk.DrawingArea.
+        frame.draw()
+        # Create axis
+        axes = [23, 116, 26]
+        render_map = np.empty(axes, dtype=bool)
+        colors = np.empty(axes + [4], dtype=np.float32)
+        for k in range(self.height):
+            for j in range(self.length):
+                for i in range(self.width):
+                    if self.map[k][j][i] != 0:
+                        id = self.map[k][j][i]
+                        render_map[i][j][k] = True
+                        colors[i][j][k] = ((id*10%256)/256 if id%3==0 else 0, (id*10%256)/256 if id%3==1 else 0, (id*10%256)/256 if id%3==2 else 0, ALPHA)
+
+        fig.clear()
+        fig.canvas.draw()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.axes.set_xlim([0, 22])
+        ax.axes.set_ylim([115, 0])
+        ax.axes.set_zlim([0, 25])
+        ax.set_xlabel('Largeur')
+        ax.set_ylabel('Longueur')
+        ax.set_zlabel('Hauteur')
+        # Voxels is used to customizations of the
+        # sizes, positions and colors.
+        ax.voxels(render_map, facecolors=colors)
+
+        toolbar = NavigationToolBarCustome(containers, container_number, frame, canvas)
+        toolbar.update()
+        frame.get_tk_widget().pack(side=tkinter.TOP, fill=tkinter.BOTH, expand=1)
 
 class Container2(Container):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.items = []
+        if self.dim == 1:
+            self.map = [0 for _ in range(self.length)]
+        elif self.dim == 2:
+            self.map = [[0 for _ in range(self.width)] for _ in range(self.length)]
+        elif self.dim == 3:
+            self.map = [[[0 for _ in range(self.width)] for _ in range(self.length)] for _ in range(self.height)]
 
-    def check_enough_space(self, item, i=0, j=0, k=0):
+    def check_enough_space(self, item, i=0, j=0, k=0, realistic: bool = False):
         if self.dim == 1:
             return (self.length - j - item.length) >= 0
         if self.dim == 2:
@@ -60,20 +165,31 @@ class Container2(Container):
                 for x in range(i, i + item.width):
                     if self.map[y][x] != 0:
                         return False
-            return True
-        if self.dim == 3:
-            for y in range(j, j + item.length):
-                for x in range(i, i + item.width):
-                    for z in range(k, k + item.height):
-                        if self.map[y][x][z] != 0:
+            if realistic:
+                for y in range(j+item.length, self.length):
+                    for x in range(i, i + item.width):
+                        if self.map[y][x] != 0:
                             return False
             return True
+        if self.dim == 3:
+            for z in range(k, k + item.height-1):
+                for y in range(j, j + item.length-1):
+                    for x in range(i, i + item.width-1):
+                        if self.map[z][y][x] != 0:
+                            return False
+            if realistic:
+                for z in range(k, k + item.height):
+                    for y in range(j + item.length, self.length):
+                        for x in range(i, i + item.width):
+                            if self.map[z][y][x] != 0:
+                                return False
+            return True
 
-    def fill_item(self, item):
+    def fill_item(self, item, realistic: bool = False):
         if self.dim == 1:
             for j in range(self.length - item.length + 1):
                 if self.map[j] == 0:
-                    if self.check_enough_space(item, j=j):
+                    if self.check_enough_space(item, j=j, realistic=realistic):
                         for y in range(item.length):
                             self.map[y + j] = item.id
                         return True
@@ -82,54 +198,54 @@ class Container2(Container):
             for j in range(self.length - item.length + 1):
                 for i in range(self.width - item.width + 1):
                     if self.map[j][i] == 0:
-                        if self.check_enough_space(item, i, j):
+                        if self.check_enough_space(item, j=j, i=i, realistic=realistic):
                             for y in range(item.length):
                                 for x in range(item.width):
                                     self.map[y + j][x + i] = item.id
                             return True
             return False
         if self.dim == 3:
-            for j in range(self.length - item.length + 1):
-                for i in range(self.width - item.width + 1):
-                    for k in range(self.height - item.height + 1):
-                        if self.map[j][i][k] == 0:
-                            if self.check_enough_space(item, i, j, k):
-                                for y in range(j, j + item.length):
-                                    for x in range(i, i + item.width):
-                                        for z in range(k, k + item.height):
-                                            self.map[y][x][z] = item.id
+            for k in range(self.height - item.height + 1):
+                for j in range(self.length - item.length + 1):
+                    for i in range(self.width - item.width + 1):
+                        if self.map[k][j][i] == 0:
+                            if self.check_enough_space(item, j=j, i=i, k=k, realistic=realistic):
+                                for z in range(k, k + item.height):
+                                    for y in range(j, j + item.length):
+                                        for x in range(i, i + item.width):
+                                            self.map[z][y][x] = item.id
                                 return True
             return False
 
 
-    def add_item_1D(self, item):
-        if self.fill_item(item):
+    def add_item_1D(self, item, realistic: bool = False):
+        if self.fill_item(item, realistic):
             self.items.append(item)
             self.used_length += item.length
             return True
         return False
 
-    def add_item_2D(self, item):
-        if self.fill_item(item):
+    def add_item_2D(self, item, realistic: bool = False):
+        if self.fill_item(item, realistic=realistic):
             self.items.append(item)
             self.used_area += item.area
             return True
         return False
 
-    def add_item_3D(self, item):
-        if self.fill_item(item):
+    def add_item_3D(self, item, realistic: bool = False):
+        if self.fill_item(item, realistic=realistic):
             self.items.append(item)
             self.used_volume += item.volume
             return True
         return False
 
-    def add_item(self, item):
+    def add_item(self, item, realistic: bool = False):
         if self.dim == 1:
-            return self.add_item_1D(item)
+            return self.add_item_1D(item, realistic=realistic)
         if self.dim == 2:
-            return self.add_item_2D(item)
+            return self.add_item_2D(item, realistic=realistic)
         if self.dim == 3:
-            return self.add_item_3D(item)
+            return self.add_item_3D(item, realistic=realistic)
         return False
 
     def print_map(self):
@@ -267,7 +383,7 @@ def d1(items: [Item]) -> [Item]:
     return containers
 
 
-def d(items: [Item], dim: int = 3, offline: bool = False) -> [Item]:
+def d(items: [Item], dim: int = 3, offline: bool = False, realistic: bool = False) -> [Container2]:
     containers = []
     if offline:
         if dim == 1:
@@ -286,17 +402,17 @@ def d(items: [Item], dim: int = 3, offline: bool = False) -> [Item]:
                 if inserted:
                     keep_going = False
             elif dim == 1:
-                inserted = containers[j].add_item(item)
+                inserted = containers[j].add_item(item, realistic)
                 if inserted:
                     keep_going = False
             elif dim == 2:
                 if (containers[j].area - containers[j].used_area) >= item.area:
-                    inserted = containers[j].add_item(item)
+                    inserted = containers[j].add_item(item, realistic)
                     if inserted:
                         keep_going = False
             elif dim == 3:
                 if (containers[j].volume - containers[j].used_volume) >= item.volume:
-                    inserted = containers[j].add_item(item)
+                    inserted = containers[j].add_item(item, realistic)
                     if inserted:
                         keep_going = False
             j += 1
@@ -509,6 +625,8 @@ def print_containers(containers):
                         print('_' * cell_width, end='')
                 print(' |   ', end='')
             print()
+    if containers[0].dim == 3:
+        print('Impossible de render un container 3D dans la console')
 
 
 def d_k(items: [Item], dim: int = 3, offline: bool = False):
@@ -536,8 +654,8 @@ if __name__ == '__main__':
     # print_containers(result)
 
     start = time.time()
-    result = d(items, dim=2, offline=True)
-    #result = d2_with_map_offline(items)
+    result = d(items, dim=3, offline=False, realistic=False)
+    #result = d3_with_map_offline(items)
     print(time.time() - start)
     print(len(result))
     c = 0
@@ -545,7 +663,11 @@ if __name__ == '__main__':
         for item in container.items:
             c += 1
     print(c)
-
+    #print_containers(result)
+    result[0].render(result)
+    print(len(result[1].items))
+    tkinter.mainloop()
+    '''
     resultArray = [[], []]
 
     for i in range(3):
@@ -557,6 +679,24 @@ if __name__ == '__main__':
         resultArray[1].append([d(items, dim=i + 1, offline=True)])
         resultArray[1][i].append(time.time() - start_time)
 
+    print('d(items, dim=i, offline=False/True, realistic=False)')
+    print_as_a_table(resultArray)
+
+    resultArray.clear()
+
+    resultArray = [[], []]
+
+    for i in range(3):
+
+        start_time = time.time()
+        resultArray[0].append([d(items, dim=i + 1, offline=False, realistic=True)])
+        resultArray[0][i].append(time.time() - start_time)
+
+        start_time = time.time()
+        resultArray[1].append([d(items, dim=i + 1, offline=True, realistic=True)])
+        resultArray[1][i].append(time.time() - start_time)
+
+    print('d(items, dim=i, offline=False/True, realistic=True)')
     print_as_a_table(resultArray)
 
     resultArray.clear()
@@ -572,32 +712,6 @@ if __name__ == '__main__':
         resultArray[1].append([d_k(items, dim=i + 1, offline=True)])
         resultArray[1][i].append(time.time() - start_time)
 
+    print('d_k(items, dim=i, offline=False/True)')
     print_as_a_table(resultArray)
-
-    resultArray = [[], []]
-
-    start_time = time.time()
-    resultArray[0].append([d(items, dim=1, offline=False)])
-    resultArray[0][0].append(time.time() - start_time)
-
-    start_time = time.time()
-    resultArray[0].append([d(items, dim=2, offline=False)])
-    resultArray[0][1].append(time.time() - start_time)
-
-    start_time = time.time()
-    resultArray[0].append([d(items, dim=3, offline=False)])
-    resultArray[0][2].append(time.time() - start_time)
-
-    start_time = time.time()
-    resultArray[1].append([d(items, dim=1, offline=True)])
-    resultArray[1][0].append(time.time() - start_time)
-
-    start_time = time.time()
-    resultArray[1].append([d(items, dim=2, offline=True)])
-    resultArray[1][1].append(time.time() - start_time)
-
-    start_time = time.time()
-    resultArray[1].append([d(items, dim=3, offline=True)])
-    resultArray[1][2].append(time.time() - start_time)
-
-    print_as_a_table(resultArray)
+    '''
