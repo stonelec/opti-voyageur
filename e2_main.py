@@ -16,6 +16,18 @@ WIDTH = int(22.94)
 HEIGHT = int(25.69)
 # Composante alpha du RGB du rendu 3D
 ALPHA = 0.8
+
+# Renvoie une couleur RGBA en fonction de l'entier entrer
+# Si le reste de la division par 3 vaut 0, seulement composante Rouge
+# Si le reste de la division par 3 vaut 1, seulement composante Vert
+# Si le reste de la division par 3 vaut 2, seulement composante Bleu
+def get_color(number):
+    return (
+        (number * 10 % 256) / 256 if number % 3 == 0 else 0,
+        (number * 10 % 256) / 256 if number % 3 == 1 else 0,
+        (number * 10 % 256) / 256 if number % 3 == 2 else 0,
+        ALPHA
+    )
 # Barre de navigation custome du rendu 3D
 class NavigationToolBarCustome(NavigationToolbar2Tk):
     toolitems = (
@@ -184,27 +196,24 @@ class Container:
                     for i in range(self.width):
                         if self.map[k][j][i] != 0:
                             id = self.map[k][j][i]
+                            # Met la case comme a coloré si elle représente un item
                             render_map[i][j][k] = True
                             # Choisit une couleur selon l'id de l'item
-                            colors[i][j][k] = ((id*10%256)/256 if id%3==0 else 0, (id*10%256)/256 if id%3==1 else 0, (id*10%256)/256 if id%3==2 else 0, ALPHA)
+                            colors[i][j][k] = get_color(id)
         elif self.dim == 2:
             for j in range(self.length):
                 for i in range(self.width):
                     if self.map[j][i] != 0:
                         id = self.map[j][i]
                         render_map[i][j][0] = True
-                        colors[i][j][0] = (
-                        (id * 10 % 256) / 256 if id % 3 == 0 else 0, (id * 10 % 256) / 256 if id % 3 == 1 else 0,
-                        (id * 10 % 256) / 256 if id % 3 == 2 else 0, ALPHA)
+                        colors[i][j][0] = get_color(id)
         elif self.dim == 1:
             for j in range(self.length):
                 for i in range(self.width):
                     if self.map[j] != 0:
                         id = self.map[j]
                         render_map[0][j][0] = True
-                        colors[0][j][0] = (
-                        (id * 10 % 256) / 256 if id % 3 == 0 else 0, (id * 10 % 256) / 256 if id % 3 == 1 else 0,
-                        (id * 10 % 256) / 256 if id % 3 == 2 else 0, ALPHA)
+                        colors[0][j][0] = get_color(id)
         # Paramétrage des axes du rendu 3D
         ax = fig.add_subplot(111, projection='3d')
         ax.set_title(f'Container {container_number}')
@@ -252,41 +261,6 @@ class Item:
             print(f'File {filename} not found')
 
         return item_list
-
-
-def d1(items: [Item]) -> [Item]:
-    containers = []
-    items = sorted(items, reverse=True, key=lambda x: x.length)
-    i = 0
-    while len(items) != 0:
-        j = i
-        keep = True
-        item = items[0]
-        while keep:
-            if len(containers) == j:
-                containers.append(Container(dimension=1))
-                containers[j].add_item(item)
-                del items[0]
-                keep = False
-            elif (containers[j].length - containers[j].used_length) >= item.length:
-                containers[j].add_item(item)
-                del items[0]
-                keep = False
-            else:
-                for item_to_replace in containers[j].items:
-                    if containers[j].used_length - item_to_replace.length + item.length <= containers[
-                        j].length and item_to_replace.length < item.length:
-                        containers[j].remove_item(item_to_replace)
-                        containers[j].add_item(item)
-                        del items[0]
-                        items.insert(0, item_to_replace)
-                        keep = False
-                        break
-            j += 1
-        if containers[i].used_length == containers[i].length:
-            i += 1
-
-    return containers
 
 
 def d(items: [Item], dim: int = 3, offline: bool = False) -> [Container]:
@@ -401,7 +375,7 @@ if __name__ == '__main__':
 
     print_as_a_table(resultArray)
 
-    result = d(items, dim=1, offline=False)
+    result = d(items, dim=3, offline=False)
     if CONSOLE_MODE:
         print_containers(result)
     if INTERACTIVE_MODE:
