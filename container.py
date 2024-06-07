@@ -522,6 +522,7 @@ def d(items: [Item], dim: int = 3, offline: bool = False) -> [Container]:
         else:
             items = sorted(items, reverse=True, key=lambda x: x.volume)
     for item in items:
+        # Index du container
         j = 0
         keep_going = True
         # Tant que l'item n'a pas été mis dans un container, passe au container suivant
