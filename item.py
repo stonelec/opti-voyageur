@@ -27,6 +27,11 @@ class SortedLinkedList:
         self.head = None
 
     def insert_sorted(self, data):
+        """
+        Insert an item in the list, keeping it sorted
+        :param data:
+        :return:
+        """
         new_node = data
         if self.head is None or self.head.mass > data.mass:
             new_node.next = self.head
@@ -39,6 +44,11 @@ class SortedLinkedList:
         current.next = new_node
 
     def remove(self, data):
+        """
+        Remove an item from the list
+        :param data:
+        :return:
+        """
         if self.head is None:
             return
         if self.head == data:
@@ -52,10 +62,18 @@ class SortedLinkedList:
             current.next = current.next.next
 
     def __iter__(self):
+        """
+        Return the iterator
+        :return:
+        """
         self._current = self.head
         return self
 
     def __next__(self):
+        """
+        Return the next item in the list
+        :return:
+        """
         if self._current is None:
             raise StopIteration
         else:
@@ -64,12 +82,19 @@ class SortedLinkedList:
             return data
 
     def print_list(self):
+        """
+        Print the list
+        """
         current = self.head
         while current:
             print(current)
             current = current.next
 
     def to_array(self):
+        """
+        Return a list of the items in the list
+        :return:
+        """
         array = []
         current = self.head
         while current:
@@ -78,14 +103,19 @@ class SortedLinkedList:
         return array
 
     def __str__(self):
+        """
+        Return a string representation of the list
+        :return:
+        """
         return str(self.to_array())
 
 
-def exact_recursion(items, C, k, best_mass, best_utility, best_items):
+def exact_recursion(items: [Item], C: float, k: int, best_mass: int, best_utility: int, best_items: [Item]) -> [int, int, [Item]]:
     current_best_utility = best_utility
     current_best_mass = best_mass
     current_best_items = best_items[:]
 
+    # Check if we can add an item that the program didn't check yet
     for i in range(k, len(items)):
         if items[i].mass <= C:
             new_mass = best_mass + items[i].mass
@@ -94,7 +124,9 @@ def exact_recursion(items, C, k, best_mass, best_utility, best_items):
                 current_best_utility = new_utility
                 current_best_mass = new_mass
                 current_best_items = best_items[:] + [items[i]]
-            recu_utility, recu_mass, recu_items = exact_recursion(items, C - items[i].mass, i + 1, new_mass, new_utility,
+
+            recu_utility, recu_mass, recu_items = exact_recursion(items, C - items[i].mass, i + 1, new_mass,
+                                                                  new_utility,
                                                                   best_items + [items[i]])
             if recu_utility > current_best_utility:
                 current_best_utility = recu_utility
@@ -104,7 +136,7 @@ def exact_recursion(items, C, k, best_mass, best_utility, best_items):
     return current_best_utility, current_best_mass, current_best_items
 
 
-def exact(items, C):
+def exact(items: [Item], C: float) -> [int, int, [Item]]:
     C = int(C * 100)
     best_items = []
     best_utility, best_mass, best_items = exact_recursion(items, C, 0, 0, 0, best_items)
@@ -112,6 +144,12 @@ def exact(items, C):
 
 
 def heuristic_1(items: [Item], C: float) -> [int, int, SortedLinkedList]:
+    """
+    Heuristic algorithm, it will try to add the best item it can, if it can't, it will try to swap an item with a better one
+    :param items:
+    :param C:
+    :return:
+    """
     total_mass = 0
     total_utility = 0
     best_item = SortedLinkedList()
@@ -136,6 +174,13 @@ def heuristic_1(items: [Item], C: float) -> [int, int, SortedLinkedList]:
 
 
 def heuristic_2(items: [Item], C: float) -> [int, int, SortedLinkedList]:
+    """
+    Heuristic algorthm, this one is a bit more efficient than the first one
+    It do not check if it can swap an item with a better one, it just adds the item if it can
+    :param items:
+    :param C:
+    :return:
+    """
     total_mass = 0
     total_utility = 0
     best_item = SortedLinkedList()
@@ -152,6 +197,11 @@ def heuristic_2(items: [Item], C: float) -> [int, int, SortedLinkedList]:
 
 
 def read_csv(filename):
+    """
+    Read a csv file and return a list of items
+    :param filename:
+    :return:
+    """
     item_list = []
     try:
         with open(filename, 'r') as file:
