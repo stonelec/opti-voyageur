@@ -11,19 +11,35 @@ if __name__ == '__main__':
     INTERACTIVE_MODE = False
     # Affiche dans la console la map des containers
     CONSOLE_MODE = False
+    # Test mode
+    TEST_MODE = True
 
-    # Calcule des performance de l'algorithme
-    resultArrays = [[], []]
-    for w in range(3):
-        start_time = time.time()
-        resultArrays[0].append([d(items, dim=w + 1, offline=False)])
-        resultArrays[0][w].append(time.time() - start_time)
+    if TEST_MODE:
+        # Calcule des performance de l'algorithme
+        resultArrays = [[], []]
+        nb_test = 5
+        for w in range(1, 4):
+            t_moy = 0
+            for p in range(nb_test):
+                start_time = time.time_ns()
+                d(items, dim=w, offline=False)
+                end_time = time.time_ns()
+                t_moy += end_time-start_time
+            t_moy /= nb_test
+            resultArrays[0].append([d(items, dim=w, offline=False)])
+            resultArrays[0][w-1].append(t_moy/1000000000)
 
-        start_time = time.time()
-        resultArrays[1].append([d(items, dim=w + 1, offline=True)])
-        resultArrays[1][w].append(time.time() - start_time)
-    # Affichage des performance de l'algorithme
-    print_as_a_table(resultArrays)
+            t_moy = 0
+            for p in range(nb_test):
+                start_time = time.time_ns()
+                d(items, dim=w, offline=True)
+                end_time = time.time_ns()
+                t_moy += end_time-start_time
+            t_moy /= nb_test
+            resultArrays[1].append([d(items, dim=w, offline=True)])
+            resultArrays[1][w-1].append(t_moy/1000000000)
+        # Affichage des performance de l'algorithme
+        print_as_a_table(resultArrays)
 
     # Containers à afficher selon les modes sélectionnés précédement
     result = d(items, dim=3, offline=False)
