@@ -29,8 +29,8 @@ class SortedLinkedList:
     def insert_sorted(self, data):
         """
         Insert an item in the list, keeping it sorted
-        :param data:
-        :return:
+        :param data: Item to insert
+        :return: None
         """
         new_node = data
         if self.head is None or self.head.mass > data.mass:
@@ -46,8 +46,8 @@ class SortedLinkedList:
     def remove(self, data):
         """
         Remove an item from the list
-        :param data:
-        :return:
+        :param data: Item to remove
+        :return: None
         """
         if self.head is None:
             return
@@ -64,7 +64,7 @@ class SortedLinkedList:
     def __iter__(self):
         """
         Return the iterator
-        :return:
+        :return: Iterator
         """
         self._current = self.head
         return self
@@ -72,7 +72,7 @@ class SortedLinkedList:
     def __next__(self):
         """
         Return the next item in the list
-        :return:
+        :return: Item
         """
         if self._current is None:
             raise StopIteration
@@ -93,7 +93,7 @@ class SortedLinkedList:
     def to_array(self):
         """
         Return a list of the items in the list
-        :return:
+        :return: [Item]
         """
         array = []
         current = self.head
@@ -105,12 +105,22 @@ class SortedLinkedList:
     def __str__(self):
         """
         Return a string representation of the list
-        :return:
+        :return: str
         """
         return str(self.to_array())
 
 
 def exact_recursion(items: [Item], C: float, k: int, best_mass: int, best_utility: int, best_items: [Item]) -> [int, int, [Item]]:
+    """
+    Recursive function for the exact algorithm
+    :param items: List of items
+    :param C: Capacity
+    :param k: Index of the item to check
+    :param best_mass: Best mass found
+    :param best_utility: Best utility found
+    :param best_items: Best items found
+    :return: Best mass, best utility, best items
+    """
     current_best_utility = best_utility
     current_best_mass = best_mass
     current_best_items = best_items[:]
@@ -137,6 +147,12 @@ def exact_recursion(items: [Item], C: float, k: int, best_mass: int, best_utilit
 
 
 def exact(items: [Item], C: float) -> [int, int, [Item]]:
+    """
+    Exact algorithm, it will try all the possible combinations of items to find the best one
+    :param items: List of items
+    :param C: Capacity
+    :return: Best mass, best utility, best items
+    """
     C = int(C * 100)
     best_items = []
     best_utility, best_mass, best_items = exact_recursion(items, C, 0, 0, 0, best_items)
@@ -146,9 +162,9 @@ def exact(items: [Item], C: float) -> [int, int, [Item]]:
 def heuristic_1(items: [Item], C: float) -> [int, int, SortedLinkedList]:
     """
     Heuristic algorithm, it will try to add the best item it can, if it can't, it will try to swap an item with a better one
-    :param items:
-    :param C:
-    :return:
+    :param items: List of items
+    :param C: Capacity
+    :return: Best mass, best utility, best items
     """
     total_mass = 0
     total_utility = 0
@@ -176,10 +192,10 @@ def heuristic_1(items: [Item], C: float) -> [int, int, SortedLinkedList]:
 def heuristic_2(items: [Item], C: float) -> [int, int, SortedLinkedList]:
     """
     Heuristic algorthm, this one is a bit more efficient than the first one
-    It do not check if it can swap an item with a better one, it just adds the item if it can
-    :param items:
-    :param C:
-    :return:
+    It doesn't check if it can swap an item with a better one, it just adds the item if it can
+    :param items: List of items
+    :param C: Capacity
+    :return: Best mass, the best utility, best items
     """
     total_mass = 0
     total_utility = 0
@@ -199,8 +215,8 @@ def heuristic_2(items: [Item], C: float) -> [int, int, SortedLinkedList]:
 def read_csv(filename):
     """
     Read a csv file and return a list of items
-    :param filename:
-    :return:
+    :param filename: Name of the file
+    :return: List of items
     """
     item_list = []
     try:
