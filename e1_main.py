@@ -5,7 +5,7 @@ import time
 def main():
     item_list = item.read_csv('velo.csv')
 
-    C = [0.6, 0.8, 1, 1.5, 2, 3, 4, 5, 6]
+    C = [0.6, 2, 3, 4, 5]
 
     print("Running exact algorithm")
 
