@@ -13,7 +13,7 @@ root = tkinter.Tk()
 LENGTH = int(115.83)
 WIDTH = int(22.94)
 HEIGHT = int(25.69)
-# Composante alpha du RGB du rendu 3D
+# Composante alpha du RGBA du rendu 3D
 ALPHA = 0.9
 
 
