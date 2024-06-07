@@ -566,17 +566,17 @@ if __name__ == '__main__':
     CONSOLE_MODE = True
 
     # Calcule des performance de l'algorithme
-    resultArray = [[], []]
-    for i in range(3):
+    resultArrays = [[], []]
+    for w in range(3):
         start_time = time.time()
-        resultArray[0].append([d(items, dim=i + 1, offline=False)])
-        resultArray[0][i].append(time.time() - start_time)
+        resultArrays[0].append([d(items, dim=w + 1, offline=False)])
+        resultArrays[0][w].append(time.time() - start_time)
 
         start_time = time.time()
-        resultArray[1].append([d(items, dim=i + 1, offline=True)])
-        resultArray[1][i].append(time.time() - start_time)
+        resultArrays[1].append([d(items, dim=w + 1, offline=True)])
+        resultArrays[1][w].append(time.time() - start_time)
     # Affichage des performance de l'algorithme
-    print_as_a_table(resultArray)
+    print_as_a_table(resultArrays)
 
     # Containers à afficher selon les modes sélectionnés précédement
     result = d(items, dim=3, offline=False)
